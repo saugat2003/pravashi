@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Family Safety Dashboard - Pradesh Setu{% endblock %}
+
+{% block extra_head %}
+<style>
+    .material-symbols-outlined.filled {
+        font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="sticky top-0 z-20 bg-background-light dark:bg-background-dark border-b border-slate-100 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 text-primary">
+            <span class="material-symbols-outlined text-2xl">shield_person</span>
+        </div>
+        <div>
+            <h1 class="text-lg font-bold leading-tight">Pradesh Setu</h1>
+            <p class="text-xs text-slate-400">Family Dashboard</p>
+        </div>
+    </div>
+    <a href="{% url 'main:safety_notifications' %}" class="relative p-2 text-slate-400 hover:text-primary transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800">
+        <span class="material-symbols-outlined">notifications</span>
+        <span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-danger ring-2 ring-background-light dark:ring-background-dark"></span>
+    </a>
+</header>
+{% endblock %}
+
+{% block content %}
+<!-- Safety Status -->
+<section class="flex flex-col items-center pt-4">
+    <div class="relative">
+        <div class="h-28 w-28 rounded-full border-4 border-slate-200 dark:border-zinc-700 bg-cover bg-center shadow-xl" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBBHjFRd862Gvn7G3Y175AZwvUFTb982uxg7pWQgw3of5IaA7oGB815ujCbECS2ev3YH5BlKp9TIq5LTY02tA1pX8Y8ubzAVFq9R_gUkTbGfF_IRYCmqaKjJ-qg-3e6nY1ibUpe5qnKqB-vx9gobwxtO-a0fIdvVjdUVxzzmWeZrGLpqxzpOe1m0xYqXJc0zwIg7dXGMkmxj301wO0oAK7akeLheA5FpEnK9stPONytFAnglYpoQp0SF1t2lSikfSTa_mR48iOm8ZU");'></div>
+        <div class="absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-full bg-success ring-4 ring-background-light dark:ring-background-dark">
+            <span class="material-symbols-outlined text-white text-lg">check</span>
+        </div>
+    </div>
+    <div class="mt-4 text-center">
+        <h2 class="text-2xl font-bold tracking-tight flex items-center justify-center gap-2">Ramesh is Safe</h2>
+        <div class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-slate-100 dark:bg-zinc-800 px-3 py-1 text-xs font-medium text-slate-400 border border-slate-200 dark:border-zinc-700">
+            <span class="material-symbols-outlined text-sm">schedule</span> Last update: 2h ago
+        </div>
+        <p class="mt-2 text-sm text-slate-400">Verified via Biometric Scan at Worksite</p>
+    </div>
+</section>
+
+<!-- Quick Actions -->
+<section class="grid grid-cols-2 gap-3 mt-6">
+    <button class="flex flex-col items-center justify-center gap-2 rounded-xl bg-primary p-4 text-white shadow-lg shadow-primary/20 active:scale-95 transition-all">
+        <span class="material-symbols-outlined text-3xl">call</span>
+        <span class="font-semibold text-sm">Call Ramesh</span>
+    </button>
+    <a href="{% url 'main:embassy_contact_directory' %}" class="flex flex-col items-center justify-center gap-2 rounded-xl bg-slate-100 dark:bg-zinc-800 p-4 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-zinc-700 active:scale-95 transition-all">
+        <span class="material-symbols-outlined text-3xl">account_balance</span>
+        <span class="font-semibold text-sm">Embassy Help</span>
+    </a>
+</section>
+
+<!-- Location -->
+<section class="overflow-hidden rounded-xl bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 mt-6">
+    <div class="flex items-center justify-between border-b border-slate-200 dark:border-zinc-700 px-4 py-3">
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">location_on</span>
+            <h3 class="font-semibold text-sm">Current Location</h3>
+        </div>
+        <span class="text-xs font-medium text-slate-400">Doha, Qatar</span>
+    </div>
+    <div class="relative h-48 w-full bg-slate-200 dark:bg-zinc-900">
+        <div class="absolute inset-0 bg-cover bg-center opacity-80" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAINVMSmHCnkSAe3oF5zXt7X03wLXVXu3atZHiQOmW_fr9lu4T9ce460fMP5hhAWJ4x4gy5o7bg6cFIFNHgP_7nfm8_tIcVm351X1NrVYI8QLp23-1Y2wH6kSzJNDUK51-AYR5zLKMHsWRVBCo9aMU57RMY1vnW7-XNOa0W65UxQ6voX6m7KHc3-dbncOAZy2NEc763iTxgjj9iRbrYHwuARL3Gjrli3gPovLDwx9GuFsWo_61vKWjgSnLX8mEg_aVlR8CKY_C40RU");'></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-100/90 dark:from-zinc-800/90 to-transparent"></div>
+        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+            <div class="relative flex h-12 w-12 items-center justify-center rounded-full bg-primary/30 animate-pulse">
+                <div class="h-4 w-4 rounded-full bg-primary shadow-[0_0_10px_rgba(124,179,66,0.6)]"></div>
+            </div>
+        </div>
+        <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between rounded-lg bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm p-3 border border-slate-200 dark:border-zinc-700">
+            <div class="flex flex-col">
+                <span class="text-xs font-bold">Al Rayyan District</span>
+                <span class="text-[10px] text-slate-400">near Mall of Qatar</span>
+            </div>
+            <button class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 dark:bg-zinc-800">
+                <span class="material-symbols-outlined text-lg">near_me</span>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Activity -->
+<section class="mt-6 mb-6">
+    <div class="mb-3 flex items-center justify-between">
+        <h3 class="font-semibold text-sm">Recent Activity</h3>
+        <a class="text-xs text-primary" href="#">View all</a>
+    </div>
+    <div class="flex flex-col gap-3">
+        <div class="flex items-start gap-3 rounded-xl bg-white dark:bg-zinc-800 p-3 border border-slate-100 dark:border-zinc-700">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-success/20 text-success">
+                <span class="material-symbols-outlined text-xl">verified_user</span>
+            </div>
+            <div class="flex-1">
+                <p class="text-sm font-semibold">Safety Check-in</p>
+                <p class="text-xs text-slate-400 mt-0.5">Biometric verification successful.</p>
+            </div>
+            <span class="text-[10px] font-medium text-slate-500 whitespace-nowrap">2h ago</span>
+        </div>
+        <div class="flex items-start gap-3 rounded-xl bg-white dark:bg-zinc-800 p-3 border border-slate-100 dark:border-zinc-700">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/20 text-primary">
+                <span class="material-symbols-outlined text-xl">work</span>
+            </div>
+            <div class="flex-1">
+                <p class="text-sm font-semibold">Arrived at Site</p>
+                <p class="text-xs text-slate-400 mt-0.5">Location: Al Rayyan Stadium Construction.</p>
+            </div>
+            <span class="text-[10px] font-medium text-slate-500 whitespace-nowrap">8:00 AM</span>
+        </div>
+        <div class="flex items-start gap-3 rounded-xl bg-white dark:bg-zinc-800 p-3 border border-slate-100 dark:border-zinc-700">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-warning/20 text-warning">
+                <span class="material-symbols-outlined text-xl">article</span>
+            </div>
+            <div class="flex-1">
+                <p class="text-sm font-semibold">Contract Updated</p>
+                <p class="text-xs text-slate-400 mt-0.5">New insurance policy added.</p>
+            </div>
+            <span class="text-[10px] font-medium text-slate-500 whitespace-nowrap">Yesterday</span>
+        </div>
+    </div>
+</section>
+{% endblock %}

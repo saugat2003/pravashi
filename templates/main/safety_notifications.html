@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - Pradesh Setu{% endblock %}
+
+{% block extra_head %}
+<style>
+    .tab-active {
+        background: #7CB342;
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="sticky top-0 z-20 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 px-6 py-3">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <button onclick="history.back()" class="w-9 h-9 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center ios-shadow">
+                <span class="material-icons-round text-slate-700 dark:text-slate-300">chevron_left</span>
+            </button>
+            <h1 class="text-lg font-bold tracking-tight">Notifications</h1>
+        </div>
+        <button class="text-xs text-primary font-semibold">Mark all read</button>
+    </div>
+    <!-- Filter Tabs -->
+    <div class="flex gap-2 mt-3 overflow-x-auto no-scrollbar">
+        <button class="tab-active px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all">All</button>
+        <button class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-slate-300 transition-all">Safety</button>
+        <button class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-slate-300 transition-all">Check‑ins</button>
+        <button class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-slate-300 transition-all">Community</button>
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<!-- Today -->
+<section>
+    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Today</h2>
+    <div class="space-y-3">
+        <!-- Safety Alert -->
+        <div class="bg-danger/5 dark:bg-danger/10 p-4 rounded-2xl border border-danger/20 flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-danger/20 flex items-center justify-center text-danger shrink-0">
+                <span class="material-icons-round text-xl">warning</span>
+            </div>
+            <div class="flex-1">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-danger">Safety Alert</span>
+                    <span class="text-[10px] text-slate-400">10 min ago</span>
+                </div>
+                <p class="text-sm font-semibold mt-1">Heat Advisory in Doha</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Temperature exceeding 45°C. Limit outdoor work.</p>
+                <button class="mt-2 text-xs font-bold text-danger">View Safety Tips →</button>
+            </div>
+        </div>
+
+        <!-- Check-in Reminder -->
+        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-100 dark:border-zinc-800 flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary shrink-0">
+                <span class="material-icons-round text-xl">schedule</span>
+            </div>
+            <div class="flex-1">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-primary">Reminder</span>
+                    <span class="text-[10px] text-slate-400">2h ago</span>
+                </div>
+                <p class="text-sm font-semibold mt-1">Daily Safety Check-in</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Let your family know you're safe.</p>
+                <a href="{% url 'main:daily_safety_check_in' %}" class="mt-2 inline-flex items-center gap-1 bg-primary text-white text-xs font-bold px-4 py-2 rounded-xl active:scale-95 transition-all">
+                    Check In Now
+                </a>
+            </div>
+        </div>
+
+        <!-- Community -->
+        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-100 dark:border-zinc-800 flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-info/10 dark:bg-info/20 flex items-center justify-center text-info shrink-0">
+                <span class="material-icons-round text-xl">groups</span>
+            </div>
+            <div class="flex-1">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-info">Community</span>
+                    <span class="text-[10px] text-slate-400">5h ago</span>
+                </div>
+                <p class="text-sm font-semibold mt-1">New Community Event</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Nepali Community Gathering this Saturday at Al Sadd.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Earlier -->
+<section class="mt-6 mb-6">
+    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Earlier</h2>
+    <div class="space-y-3">
+        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-100 dark:border-zinc-800 flex items-start gap-3 opacity-70">
+            <div class="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success shrink-0">
+                <span class="material-icons-round text-xl">verified</span>
+            </div>
+            <div class="flex-1">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-success">Contract</span>
+                    <span class="text-[10px] text-slate-400">Yesterday</span>
+                </div>
+                <p class="text-sm font-semibold mt-1">Contract Analysis Complete</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">2 clauses flagged for review.</p>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-100 dark:border-zinc-800 flex items-start gap-3 opacity-70">
+            <div class="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center text-warning shrink-0">
+                <span class="material-icons-round text-xl">folder</span>
+            </div>
+            <div class="flex-1">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-warning">Document</span>
+                    <span class="text-[10px] text-slate-400">2 days ago</span>
+                </div>
+                <p class="text-sm font-semibold mt-1">Document Uploaded</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Your passport copy was securely stored.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
