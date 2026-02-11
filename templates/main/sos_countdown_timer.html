@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}SOS Countdown - Pradesh Setu{% endblock %}
+
+{% block extra_head %}
+<style>
+    .sos-bg {
+        background: radial-gradient(circle at center, #7f1d1d 0%, #450a0a 60%, #1c0505 100%);
+    }
+    .ripple-ring {
+        animation: rippleOut 2s cubic-bezier(0.1,0.5,0.3,1) infinite;
+    }
+    .ripple-ring:nth-child(2) { animation-delay: 0.4s; }
+    .ripple-ring:nth-child(3) { animation-delay: 0.8s; }
+    @keyframes rippleOut {
+        0% { transform: scale(0.6); opacity: 0.5; }
+        100% { transform: scale(2.5); opacity: 0; }
+    }
+    .countdown-pulse {
+        animation: countdownPulse 1s ease-in-out infinite;
+    }
+    @keyframes countdownPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.08); }
+    }
+</style>
+{% endblock %}
+
+{% block body_class %}sos-bg text-white{% endblock %}
+
+{% block header %}{% endblock %}
+
+{% block main_class %}flex flex-col items-center justify-center min-h-screen px-6{% endblock %}
+
+{% block bottom_nav %}{% endblock %}
+
+{% block content %}
+<!-- Status Text -->
+<div class="text-center mb-8">
+    <p class="text-sm font-semibold text-red-300 uppercase tracking-[0.3em]">Emergency SOS</p>
+    <p class="text-xs text-red-400/70 mt-1">Sending alert in...</p>
+</div>
+
+<!-- Countdown Circle -->
+<div class="relative flex items-center justify-center mb-12">
+    <!-- Ripple Rings -->
+    <div class="absolute inset-0 flex items-center justify-center">
+        <div class="ripple-ring absolute w-48 h-48 rounded-full border border-red-500/30"></div>
+        <div class="ripple-ring absolute w-48 h-48 rounded-full border border-red-500/20"></div>
+        <div class="ripple-ring absolute w-48 h-48 rounded-full border border-red-500/10"></div>
+    </div>
+
+    <!-- Main Circle -->
+    <div class="relative w-48 h-48 rounded-full bg-gradient-to-b from-red-500/30 to-red-900/30 border-2 border-red-500/40 flex items-center justify-center shadow-[0_0_60px_rgba(239,68,68,0.3)]">
+        <span id="countdown-number" class="countdown-pulse text-8xl font-black text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">5</span>
+    </div>
+</div>
+
+<!-- Info -->
+<div class="text-center mb-10 max-w-[280px]">
+    <div class="flex items-center justify-center gap-2 mb-3">
+        <span class="material-icons-round text-red-400 text-sm animate-pulse">location_on</span>
+        <p class="text-xs text-red-300/80">GPS location will be shared</p>
+    </div>
+    <p class="text-xs text-red-400/60 leading-relaxed">
+        Alert will be sent to your emergency contacts, nearest embassy, and local authorities.
+    </p>
+</div>
+
+<!-- Cancel Button -->
+<a href="{% url 'main:emergency_sos_activation' %}" class="w-full max-w-[300px] flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white font-bold py-4 rounded-2xl transition-all active:scale-95">
+    <span class="material-icons-round">close</span>
+    Cancel SOS
+</a>
+
+<p class="text-[10px] text-red-400/50 mt-4">Tap to cancel emergency alert</p>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let count = 5;
+    const el = document.getElementById('countdown-number');
+    const timer = setInterval(() => {
+        count--;
+        if (count <= 0) {
+            clearInterval(timer);
+            el.textContent = '!';
+            el.classList.remove('countdown-pulse');
+            // In production: trigger actual SOS here
+        } else {
+            el.textContent = count;
+        }
+    }, 1000);
+</script>
+{% endblock %}
