@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In - Pradesh Setu{% endblock %}
+{% block header %}{% endblock %}
+{% block bottom_nav %}{% endblock %}
+{% block main_class %}flex flex-col items-center justify-center min-h-screen px-6 py-10{% endblock %}
+
+{% block content %}
+<div class="relative z-10 w-full max-w-sm">
+    <div class="text-center mb-8">
+        <div class="inline-flex items-center gap-2 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
+                <span class="material-symbols-outlined text-white text-2xl">shield_person</span>
+            </div>
+        </div>
+        <h1 class="text-2xl font-extrabold tracking-tight mb-1">Welcome Back</h1>
+        <p class="text-sm text-slate-400">Sign in to Pradesh Setu</p>
+    </div>
+
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="bg-danger/10 border border-danger/20 text-danger text-sm p-3 rounded-xl">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <div>
+            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">Username</label>
+            <input type="text" name="username" required
+                   class="w-full px-4 py-3.5 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-2xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                   placeholder="Enter your username"/>
+        </div>
+        <div>
+            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">Password</label>
+            <input type="password" name="password" required
+                   class="w-full px-4 py-3.5 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-2xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                   placeholder="Enter your password"/>
+        </div>
+        <button type="submit" class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-lg shadow-primary/30">
+            Sign In
+            <span class="material-icons-round">login</span>
+        </button>
+    </form>
+
+    <p class="text-center text-sm text-slate-400 mt-6">
+        Don't have an account? <a href="{% url 'main:register' %}" class="text-primary font-semibold">Create Account</a>
+    </p>
+</div>
+{% endblock %}

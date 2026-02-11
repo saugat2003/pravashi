@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account - Pradesh Setu{% endblock %}
+{% block header %}{% endblock %}
+{% block bottom_nav %}{% endblock %}
+{% block main_class %}flex flex-col items-center justify-center min-h-screen px-6 py-10{% endblock %}
+
+{% block content %}
+<div class="relative z-10 w-full max-w-sm">
+    <div class="text-center mb-6">
+        <div class="inline-flex items-center gap-2 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
+                <span class="material-symbols-outlined text-white text-2xl">shield_person</span>
+            </div>
+        </div>
+        <h1 class="text-2xl font-extrabold tracking-tight mb-1">Create Account</h1>
+        <p class="text-sm text-slate-400">Join Pradesh Setu today</p>
+    </div>
+
+    {% if form.errors %}
+    <div class="mb-4 bg-danger/10 border border-danger/20 text-danger text-sm p-3 rounded-xl">
+        {% for field, errors in form.errors.items %}
+            {% for error in errors %}<p>{{ error }}</p>{% endfor %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" class="space-y-3">
+        {% csrf_token %}
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">First Name</label>
+                <input type="text" name="first_name" value="{{ form.first_name.value|default:'' }}" required
+                       class="w-full px-3 py-3 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-2xl text-sm focus:ring-2 focus:ring-primary outline-none"/>
+            </div>
+            <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Last Name</label>
+                <input type="text" name="last_name" value="{{ form.last_name.value|default:'' }}" required
+                       class="w-full px-3 py-3 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-2xl text-sm focus:ring-2 focus:ring-primary outline-none"/>
+            </div>
+        </div>
+        <div>
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Username</label>
+            <input type="text" name="username" value="{{ form.username.value|default:'' }}" required
+                   class="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-2xl text-sm focus:ring-2 focus:ring-primary outline-none"/>
+        </div>
+        <div>
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Email</label>
+            <input type="email" name="email" value="{{ form.email.value|default:'' }}"
+                   class="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-2xl text-sm focus:ring-2 focus:ring-primary outline-none"/>
+        </div>
+        <div>
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Phone</label>
+            <input type="tel" name="phone" value="{{ form.phone.value|default:'' }}"
+                   class="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-2xl text-sm focus:ring-2 focus:ring-primary outline-none"/>
+        </div>
+
+        <!-- Profile Type -->
+        <div>
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">I am a</label>
+            <div class="grid grid-cols-2 gap-3">
+                <label class="cursor-pointer">
+                    <input type="radio" name="profile_type" value="worker" class="peer hidden" checked/>
+                    <div class="peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:ring-2 peer-checked:ring-primary/20 bg-white dark:bg-zinc-800 border-2 border-slate-200 dark:border-zinc-700 rounded-2xl p-3 text-center transition-all">
+                        <span class="material-symbols-outlined text-primary text-2xl">engineering</span>
+                        <p class="text-xs font-bold mt-1">Worker</p>
+                    </div>
+                </label>
+                <label class="cursor-pointer">
+                    <input type="radio" name="profile_type" value="family" class="peer hidden"/>
+                    <div class="peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:ring-2 peer-checked:ring-primary/20 bg-white dark:bg-zinc-800 border-2 border-slate-200 dark:border-zinc-700 rounded-2xl p-3 text-center transition-all">
+                        <span class="material-symbols-outlined text-info text-2xl">family_restroom</span>
+                        <p class="text-xs font-bold mt-1">Family</p>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Language -->
+        <div>
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">Language / भाषा</label>
+            <select name="language_preference" class="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-2xl text-sm focus:ring-2 focus:ring-primary outline-none">
+                <option value="en">English</option>
+                <option value="ne">नेपाली</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Password</label>
+            <input type="password" name="password1" required
+                   class="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-2xl text-sm focus:ring-2 focus:ring-primary outline-none"/>
+        </div>
+        <div>
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Confirm Password</label>
+            <input type="password" name="password2" required
+                   class="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-2xl text-sm focus:ring-2 focus:ring-primary outline-none"/>
+        </div>
+
+        <button type="submit" class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-lg shadow-primary/30 mt-2">
+            Create Account
+            <span class="material-icons-round">arrow_forward</span>
+        </button>
+    </form>
+
+    <p class="text-center text-sm text-slate-400 mt-4 pb-4">
+        Already have an account? <a href="{% url 'main:login' %}" class="text-primary font-semibold">Sign In</a>
+    </p>
+</div>
+{% endblock %}
