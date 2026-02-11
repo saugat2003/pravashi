@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome - Pradesh Setu{% endblock %}
+
+{% block extra_head %}
+<style>
+    .blob-1 { animation: blob1 12s ease-in-out infinite; }
+    .blob-2 { animation: blob2 15s ease-in-out infinite; }
+    @keyframes blob1 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(30px, -20px) scale(1.1); }
+        66% { transform: translate(-10px, 20px) scale(0.9); }
+    }
+    @keyframes blob2 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(-20px, 15px) scale(0.95); }
+        66% { transform: translate(15px, -25px) scale(1.05); }
+    }
+</style>
+{% endblock %}
+
+{% block body_class %}bg-background-light dark:bg-background-dark{% endblock %}
+
+{% block header %}{% endblock %}
+
+{% block main_class %}flex flex-col items-center justify-between min-h-screen px-6 py-10{% endblock %}
+
+{% block bottom_nav %}{% endblock %}
+
+{% block content %}
+<!-- Decorative Blobs -->
+<div class="pointer-events-none fixed inset-0 overflow-hidden">
+    <div class="blob-1 absolute -top-20 -left-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl"></div>
+    <div class="blob-2 absolute -bottom-20 -right-20 h-72 w-72 rounded-full bg-primary/5 blur-3xl"></div>
+</div>
+
+<!-- Content -->
+<div class="relative z-10 flex flex-col items-center text-center flex-1 justify-center">
+    <!-- Illustration -->
+    <div class="relative mb-10">
+        <div class="w-56 h-56 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+            <div class="w-44 h-44 rounded-full bg-primary/20 dark:bg-primary/30 flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary" style="font-size:72px;">shield_person</span>
+            </div>
+        </div>
+        <div class="absolute -bottom-2 -right-2 bg-white dark:bg-zinc-800 rounded-2xl px-3 py-2 ios-shadow flex items-center gap-1.5">
+            <span class="material-icons-round text-success text-sm">check_circle</span>
+            <span class="text-[11px] font-bold">VERIFIED</span>
+        </div>
+    </div>
+
+    <!-- Text -->
+    <h1 class="text-3xl font-extrabold tracking-tight leading-tight mb-3">
+        Welcome to<br><span class="text-primary">Pradesh Setu</span>
+    </h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400 max-w-[280px] leading-relaxed">
+        Your safety companion for working abroad. We protect Nepali migrant workers with AI-powered tools.
+    </p>
+</div>
+
+<!-- Bottom Section -->
+<div class="relative z-10 w-full flex flex-col items-center gap-6 pb-4">
+    <!-- Progress Dots -->
+    <div class="flex gap-2">
+        <div class="w-8 h-2 rounded-full bg-primary"></div>
+        <div class="w-2 h-2 rounded-full bg-slate-300 dark:bg-zinc-600"></div>
+        <div class="w-2 h-2 rounded-full bg-slate-300 dark:bg-zinc-600"></div>
+    </div>
+
+    <!-- Next Button -->
+    <a href="{% url 'main:onboarding_key_features' %}" class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-lg shadow-primary/30">
+        Get Started
+        <span class="material-icons-round">arrow_forward</span>
+    </a>
+
+    <p class="text-xs text-slate-400 dark:text-slate-500">
+        Already have an account? <a href="#" class="text-primary font-semibold">Sign In</a>
+    </p>
+</div>
+{% endblock %}
