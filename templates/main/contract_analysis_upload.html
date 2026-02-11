@@ -24,21 +24,21 @@
 </div>
 
 <!-- Upload Area -->
-<div class="bg-primary/10 dark:bg-primary/5 rounded-[32px] p-6 mb-8 border-2 border-dashed border-primary/30 flex flex-col items-center text-center">
+<form method="post" enctype="multipart/form-data" class="bg-primary/10 dark:bg-primary/5 rounded-[32px] p-6 mb-8 border-2 border-dashed border-primary/30 flex flex-col items-center text-center">
+    {% csrf_token %}
     <div class="w-20 h-20 bg-primary rounded-full flex items-center justify-center mb-6 shadow-lg shadow-primary/20">
         <span class="material-symbols-rounded text-white text-4xl">cloud_upload</span>
     </div>
     <h3 class="text-lg font-bold">Upload Contract</h3>
-    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-6 px-4">Support PDF, JPG, or PNG files up to 10MB.</p>
+    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-4 px-4">Support PDF, JPG, or PNG files up to 10MB.</p>
+    {{ form.employer_name }}
+    <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required class="mb-4 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/80 w-full"/>
     <div class="flex gap-3 w-full">
-        <button class="flex-1 py-3 px-4 bg-primary text-white font-bold rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-transform">
-            <span class="material-symbols-rounded text-xl">upload_file</span> Upload File
-        </button>
-        <button class="w-14 h-14 bg-white dark:bg-card-dark text-primary rounded-2xl flex items-center justify-center shadow-sm active:scale-95 transition-transform">
-            <span class="material-symbols-rounded">photo_camera</span>
+        <button type="submit" class="flex-1 py-3 px-4 bg-primary text-white font-bold rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-transform">
+            <span class="material-symbols-rounded text-xl">upload_file</span> Analyze Contract
         </button>
     </div>
-</div>
+</form>
 
 <!-- Recent Analysis -->
 <div class="flex items-center justify-between mb-4">
@@ -46,50 +46,27 @@
     <button class="text-primary text-sm font-semibold">See All</button>
 </div>
 <div class="space-y-4 mb-6">
-    <a href="{% url 'main:contract_risk_report' %}" class="bg-white dark:bg-card-dark p-4 rounded-[24px] shadow-sm flex items-center justify-between border border-gray-50 dark:border-zinc-800 block">
+    {% for a in recent_analyses %}
+    <a href="{% url 'main:contract_risk_report' a.pk %}" class="bg-white dark:bg-card-dark p-4 rounded-[24px] shadow-sm flex items-center justify-between border border-gray-50 dark:border-zinc-800 block">
         <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center">
-                <span class="material-symbols-rounded text-green-600 dark:text-green-400">verified_user</span>
+            <div class="w-12 h-12 {% if a.risk_level == 'low' %}bg-green-100 dark:bg-green-900/30{% elif a.risk_level == 'high' %}bg-red-100 dark:bg-red-900/30{% else %}bg-amber-100 dark:bg-amber-900/30{% endif %} rounded-2xl flex items-center justify-center">
+                <span class="material-symbols-rounded {% if a.risk_level == 'low' %}text-green-600 dark:text-green-400{% elif a.risk_level == 'high' %}text-red-600 dark:text-red-400{% else %}text-amber-600 dark:text-amber-400{% endif %}">{% if a.risk_level == 'low' %}verified_user{% elif a.risk_level == 'high' %}report{% else %}warning{% endif %}</span>
             </div>
             <div>
-                <h4 class="font-bold text-sm">Dubai Construction Co.</h4>
-                <p class="text-xs text-gray-400">Checked: 14 Mar 2025</p>
+                <h4 class="font-bold text-sm">{{ a.employer_name|default:'Contract' }}</h4>
+                <p class="text-xs text-gray-400">Checked: {{ a.analyzed_at|date:'d M Y' }}</p>
             </div>
         </div>
         <div class="text-right">
-            <div class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-bold rounded-full uppercase tracking-wider">Low Risk</div>
-            <p class="text-[10px] text-gray-400 mt-1">Score: 94/100</p>
+            <div class="px-3 py-1 {% if a.risk_level == 'low' %}bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400{% elif a.risk_level == 'high' %}bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400{% else %}bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400{% endif %} text-[10px] font-bold rounded-full uppercase tracking-wider">{{ a.get_risk_level_display }} Risk</div>
+            <p class="text-[10px] text-gray-400 mt-1">Score: {{ a.risk_score }}/100</p>
         </div>
     </a>
-    <a href="{% url 'main:contract_risk_report' %}" class="bg-white dark:bg-card-dark p-4 rounded-[24px] shadow-sm flex items-center justify-between border border-gray-50 dark:border-zinc-800 block">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center">
-                <span class="material-symbols-rounded text-red-600 dark:text-red-400">report</span>
-            </div>
-            <div>
-                <h4 class="font-bold text-sm">Qatar Logistics Ltd.</h4>
-                <p class="text-xs text-gray-400">Checked: 10 Mar 2025</p>
-            </div>
-        </div>
-        <div class="text-right">
-            <div class="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-[10px] font-bold rounded-full uppercase tracking-wider">High Risk</div>
-            <p class="text-[10px] text-gray-400 mt-1">Score: 32/100</p>
-        </div>
-    </a>
-    <div class="bg-white dark:bg-card-dark p-4 rounded-[24px] shadow-sm flex items-center justify-between border border-gray-50 dark:border-zinc-800 opacity-80">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center">
-                <span class="material-symbols-rounded text-amber-600 dark:text-amber-400">warning</span>
-            </div>
-            <div>
-                <h4 class="font-bold text-sm">Malaysia Tech Hub</h4>
-                <p class="text-xs text-gray-400">Checked: 05 Mar 2025</p>
-            </div>
-        </div>
-        <div class="text-right">
-            <div class="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-bold rounded-full uppercase tracking-wider">Medium Risk</div>
-            <p class="text-[10px] text-gray-400 mt-1">Score: 68/100</p>
-        </div>
+    {% empty %}
+    <div class="bg-white dark:bg-card-dark p-6 rounded-[24px] shadow-sm border border-gray-50 dark:border-zinc-800 text-center">
+        <span class="material-symbols-rounded text-gray-300 text-4xl">search_off</span>
+        <p class="text-sm text-gray-400 mt-2">No analyses yet. Upload your first contract above.</p>
     </div>
+    {% endfor %}
 </div>
 {% endblock %}

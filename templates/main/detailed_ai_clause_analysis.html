@@ -31,13 +31,13 @@
                 <span class="material-icons-round">description</span>
             </div>
             <div class="min-w-0">
-                <p class="text-sm font-medium truncate">Employment_Contract_Final.pdf</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Scanned Today &bull; 10:42 AM</p>
+                <p class="text-sm font-medium truncate">{{ analysis.employer_name|default:'Contract' }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Scanned {{ analysis.analyzed_at|date:'d M Y' }} &bull; {{ analysis.analyzed_at|time:'h:i A' }}</p>
             </div>
         </div>
-        <div class="flex-shrink-0 flex items-center gap-1 bg-danger/10 text-danger px-2 py-1 rounded-lg border border-danger/20">
-            <span class="material-icons-round text-sm">warning</span>
-            <span class="text-xs font-bold uppercase tracking-wide">High Risk</span>
+        <div class="flex-shrink-0 flex items-center gap-1 {% if analysis.risk_level == 'high' %}bg-danger/10 text-danger border-danger/20{% elif analysis.risk_level == 'low' %}bg-success/10 text-success border-success/20{% else %}bg-warning/10 text-warning border-warning/20{% endif %} px-2 py-1 rounded-lg border">
+            <span class="material-icons-round text-sm">{% if analysis.risk_level == 'high' %}warning{% elif analysis.risk_level == 'low' %}check_circle{% else %}info{% endif %}</span>
+            <span class="text-xs font-bold uppercase tracking-wide">{{ analysis.get_risk_level_display }} Risk</span>
         </div>
     </div>
 </header>
@@ -81,73 +81,57 @@
     <div class="px-5 pb-6 pt-2">
         <div class="flex justify-between items-end mb-4">
             <h2 class="text-lg font-bold">AI Findings</h2>
-            <span class="text-xs bg-gray-200 dark:bg-white/10 px-2 py-1 rounded text-gray-600 dark:text-gray-400">2 Issues Found</span>
+            <span class="text-xs bg-gray-200 dark:bg-white/10 px-2 py-1 rounded text-gray-600 dark:text-gray-400">{{ clauses|length }} Issue{{ clauses|length|pluralize }} Found</span>
         </div>
         <div class="space-y-4">
-            <!-- Critical Finding -->
-            <div class="bg-white dark:bg-zinc-900 rounded-xl p-4 border border-danger/30 shadow-sm">
+            {% for clause in clauses %}
+            <div class="bg-white dark:bg-zinc-900 rounded-xl p-4 border {% if clause.severity == 'illegal' %}border-danger/30{% elif clause.severity == 'high_risk' %}border-yellow-500/20{% else %}border-slate-200{% endif %} shadow-sm">
                 <div class="flex gap-4">
                     <div class="flex-shrink-0 mt-1">
-                        <div class="w-10 h-10 rounded-full bg-danger/10 flex items-center justify-center text-danger border border-danger/20">
-                            <span class="material-icons-round">gpp_bad</span>
+                        <div class="w-10 h-10 rounded-full {% if clause.severity == 'illegal' %}bg-danger/10 text-danger border-danger/20{% elif clause.severity == 'high_risk' %}bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border-yellow-500/20{% else %}bg-amber-100 text-amber-600 border-amber-200{% endif %} flex items-center justify-center border">
+                            <span class="material-icons-round">{% if clause.severity == 'illegal' %}gpp_bad{% else %}priority_high{% endif %}</span>
                         </div>
                     </div>
                     <div class="flex-1">
                         <div class="flex justify-between items-start">
-                            <h3 class="font-bold text-danger text-base">Red Flag: Passport Retention</h3>
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-white bg-danger px-1.5 py-0.5 rounded">Illegal</span>
+                            <h3 class="font-bold {% if clause.severity == 'illegal' %}text-danger{% elif clause.severity == 'high_risk' %}text-yellow-700 dark:text-yellow-500{% else %}text-amber-700{% endif %} text-base">{{ clause.title }}</h3>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-white {% if clause.severity == 'illegal' %}bg-danger{% elif clause.severity == 'high_risk' %}bg-yellow-500{% else %}bg-amber-500{% endif %} px-1.5 py-0.5 rounded">{{ clause.get_severity_display }}</span>
                         </div>
-                        <h4 class="text-sm font-semibold mt-1 mb-2">पासपोर्ट जफत (Passport Seizure)</h4>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 leading-snug">
-                            It is illegal for employers to hold your passport. This limits your freedom of movement.
-                        </p>
-                        <p class="text-sm text-gray-500 mt-2 italic">
-                            "रोजगारदाताले तपाइँको राहदानी राख्नु गैरकानूनी हो। यसले तपाइँको स्वतन्त्रतामा बाधा पुर्‍याउँछ।"
-                        </p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 leading-snug mt-2">{{ clause.explanation_ne }}</p>
+                        {% if clause.original_text %}
+                        <p class="text-sm text-gray-500 mt-2 italic">"{{ clause.original_text|truncatewords:20 }}"</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
-            <!-- Warning Finding -->
-            <div class="bg-white dark:bg-zinc-900 rounded-xl p-4 border border-yellow-500/20 shadow-sm">
-                <div class="flex gap-4">
-                    <div class="flex-shrink-0 mt-1">
-                        <div class="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-600 dark:text-yellow-500 border border-yellow-500/20">
-                            <span class="material-icons-round">priority_high</span>
-                        </div>
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="font-bold text-yellow-700 dark:text-yellow-500 text-base">Warning: Undefined Overtime</h3>
-                        <h4 class="text-sm font-semibold mt-1 mb-2">अस्पष्ट ओभरटाइम (Unclear Overtime)</h4>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 leading-snug">
-                            Rate is not specified. "Discretion of employer" can lead to unpaid work.
-                        </p>
-                        <p class="text-sm text-gray-500 mt-2 italic">
-                            "दर तोकिएको छैन। रोजगारदाताको तजबिजमा भन्नुको अर्थ भुक्तानी नपाउन पनि सकिन्छ।"
-                        </p>
-                    </div>
-                </div>
+            {% empty %}
+            <div class="text-center py-4">
+                <span class="material-symbols-rounded text-success text-3xl">verified</span>
+                <p class="text-sm text-gray-500 mt-1">No issues found in this contract.</p>
             </div>
+            {% endfor %}
         </div>
 
         <!-- AI Recommendation -->
-        <div class="mt-6 bg-danger text-white rounded-xl shadow-lg shadow-danger/30 p-4">
+        {% if analysis.ai_recommendation %}
+        <div class="mt-6 {% if analysis.risk_level == 'high' %}bg-danger{% elif analysis.risk_level == 'low' %}bg-success{% else %}bg-warning{% endif %} text-white rounded-xl shadow-lg p-4">
             <div class="flex items-start gap-3">
                 <span class="material-icons-round text-white/90 bg-white/20 rounded-full p-1 text-lg">verified_user</span>
                 <div>
                     <h3 class="font-bold text-sm uppercase tracking-wide opacity-90">AI Recommendation</h3>
-                    <p class="font-medium text-lg leading-tight mt-0.5">Do not sign this contract.</p>
-                    <p class="text-white/80 text-sm mt-1">यो सम्झौतामा हस्ताक्षर नगर्नुहोस्।</p>
+                    <p class="font-medium text-lg leading-tight mt-0.5">{{ analysis.ai_recommendation }}</p>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-3 mt-4">
-                <a href="{% url 'main:embassy_contact_directory' %}" class="flex items-center justify-center gap-2 bg-white text-danger font-bold py-3 px-4 rounded-lg">
+                <a href="{% url 'main:embassy_contact_directory' %}" class="flex items-center justify-center gap-2 bg-white {% if analysis.risk_level == 'high' %}text-danger{% elif analysis.risk_level == 'low' %}text-success{% else %}text-warning{% endif %} font-bold py-3 px-4 rounded-lg">
                     <span class="material-icons-round text-lg">call</span> Call Embassy
                 </a>
-                <button class="flex items-center justify-center gap-2 bg-black/20 text-white font-semibold py-3 px-4 rounded-lg border border-white/10">
-                    <span class="material-icons-round text-lg">translate</span> Translate All
-                </button>
+                <a href="{% url 'main:contract_analysis_upload' %}" class="flex items-center justify-center gap-2 bg-black/20 text-white font-semibold py-3 px-4 rounded-lg border border-white/10">
+                    <span class="material-icons-round text-lg">upload_file</span> New Analysis
+                </a>
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

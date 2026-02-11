@@ -31,35 +31,35 @@
 <div class="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 mb-8 shadow-sm border border-slate-50 dark:border-zinc-800 flex flex-col items-center">
     <div class="relative w-48 h-48 flex items-center justify-center">
         <div class="absolute inset-0 rounded-full border-[12px] border-slate-100 dark:border-zinc-800"></div>
-        <div class="absolute inset-0 rounded-full border-[12px] border-primary border-r-transparent border-b-transparent -rotate-45"></div>
+        <div class="absolute inset-0 rounded-full border-[12px] {% if analysis.risk_level == 'high' %}border-danger{% elif analysis.risk_level == 'low' %}border-success{% else %}border-warning{% endif %} border-r-transparent border-b-transparent -rotate-45"></div>
         <div class="text-center z-10">
             <span class="text-xs font-bold text-slate-400 dark:text-zinc-500 tracking-widest uppercase mb-1 block">Risk Score</span>
-            <div class="text-4xl font-extrabold text-warning">Medium</div>
-            <p class="text-sm text-slate-500 mt-1 italic">42/100</p>
+            <div class="text-4xl font-extrabold {% if analysis.risk_level == 'high' %}text-danger{% elif analysis.risk_level == 'low' %}text-success{% else %}text-warning{% endif %}">{{ analysis.get_risk_level_display }}</div>
+            <p class="text-sm text-slate-500 mt-1 italic">{{ analysis.risk_score }}/100</p>
         </div>
     </div>
     <p class="mt-6 text-center text-slate-600 dark:text-zinc-400 text-sm leading-relaxed px-4">
-        Our AI found <span class="font-bold text-slate-900 dark:text-white">2 critical alerts</span> in your employment contract that require attention.
+        Our AI found <span class="font-bold text-slate-900 dark:text-white">{{ clauses|length }} flagged clause{{ clauses|length|pluralize }}</span> in your employment contract that require attention.
     </p>
 </div>
 
 <!-- Flagged Clauses -->
 <div class="flex items-center justify-between mb-4 px-2">
     <h2 class="text-lg font-bold">Flagged Clauses</h2>
-    <span class="px-3 py-1 bg-warning/10 text-warning rounded-full text-xs font-bold uppercase tracking-wider">2 Issues Found</span>
+    <span class="px-3 py-1 bg-warning/10 text-warning rounded-full text-xs font-bold uppercase tracking-wider">{{ clauses|length }} Issue{{ clauses|length|pluralize }} Found</span>
 </div>
 
 <div class="space-y-4">
-    <!-- Clause 1 -->
+    {% for clause in clauses %}
     <details class="group bg-white dark:bg-zinc-900 rounded-3xl border border-slate-100 dark:border-zinc-800 transition-all duration-300 open:ring-2 open:ring-primary/20">
         <summary class="flex items-center justify-between p-5 cursor-pointer list-none">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-500">
-                    <span class="material-icons-round">warning_amber</span>
+                <div class="w-12 h-12 rounded-2xl {% if clause.severity == 'illegal' %}bg-red-50 dark:bg-red-900/20{% elif clause.severity == 'high_risk' %}bg-amber-50 dark:bg-amber-900/20{% else %}bg-yellow-50 dark:bg-yellow-900/20{% endif %} flex items-center justify-center {% if clause.severity == 'illegal' %}text-red-500{% elif clause.severity == 'high_risk' %}text-amber-500{% else %}text-yellow-500{% endif %}">
+                    <span class="material-icons-round">{% if clause.severity == 'illegal' %}error_outline{% else %}warning_amber{% endif %}</span>
                 </div>
                 <div>
-                    <h3 class="font-bold text-slate-900 dark:text-white">Passport Retention</h3>
-                    <p class="text-xs text-slate-500 dark:text-zinc-400">Clause 14.2 &bull; High Risk</p>
+                    <h3 class="font-bold text-slate-900 dark:text-white">{{ clause.title }}</h3>
+                    <p class="text-xs text-slate-500 dark:text-zinc-400">{{ clause.clause_reference }} &bull; {{ clause.get_severity_display }}</p>
                 </div>
             </div>
             <span class="material-icons-round transition-transform duration-300 group-open:rotate-180 text-slate-400">expand_more</span>
@@ -69,65 +69,37 @@
             <div class="space-y-4">
                 <div>
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter mb-1">Contract Text</p>
-                    <p class="text-sm text-slate-600 dark:text-zinc-300 italic">"The employer shall hold the worker's travel documents for safe keeping..."</p>
+                    <p class="text-sm text-slate-600 dark:text-zinc-300 italic">"{{ clause.original_text }}"</p>
                 </div>
                 <div class="bg-primary/5 dark:bg-primary/10 p-4 rounded-2xl border border-primary/10">
                     <div class="flex items-center gap-2 mb-2">
                         <span class="material-icons-round text-primary text-sm">translate</span>
-                        <p class="text-xs font-bold text-primary uppercase tracking-tighter">Plain Nepali Explanation</p>
+                        <p class="text-xs font-bold text-primary uppercase tracking-tighter">Explanation</p>
                     </div>
-                    <p class="text-sm font-medium text-slate-800 dark:text-zinc-200">
-                        तपाईंको कम्पनीले राहदानी (पासपोर्ट) राख्नु अवैध हो। अन्तर्राष्ट्रिय कानुन अनुसार राहदानी तपाईंसँगै हुनुपर्छ।
-                    </p>
+                    <p class="text-sm font-medium text-slate-800 dark:text-zinc-200">{{ clause.explanation_ne }}</p>
                 </div>
             </div>
         </div>
     </details>
-
-    <!-- Clause 2 -->
-    <details class="group bg-white dark:bg-zinc-900 rounded-3xl border border-slate-100 dark:border-zinc-800 transition-all duration-300 open:ring-2 open:ring-primary/20">
-        <summary class="flex items-center justify-between p-5 cursor-pointer list-none">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-500">
-                    <span class="material-icons-round">error_outline</span>
-                </div>
-                <div>
-                    <h3 class="font-bold text-slate-900 dark:text-white">Salary Mismatch</h3>
-                    <p class="text-xs text-slate-500 dark:text-zinc-400">Clause 4.1 &bull; Warning</p>
-                </div>
-            </div>
-            <span class="material-icons-round transition-transform duration-300 group-open:rotate-180 text-slate-400">expand_more</span>
-        </summary>
-        <div class="px-5 pb-6">
-            <div class="h-px bg-slate-100 dark:bg-zinc-800 mb-4"></div>
-            <div class="space-y-4">
-                <div>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter mb-1">Contract Text</p>
-                    <p class="text-sm text-slate-600 dark:text-zinc-300 italic">"Basic salary is defined as 1,200 AED plus variable allowances..."</p>
-                </div>
-                <div class="bg-primary/5 dark:bg-primary/10 p-4 rounded-2xl border border-primary/10">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="material-icons-round text-primary text-sm">translate</span>
-                        <p class="text-xs font-bold text-primary uppercase tracking-tighter">Plain Nepali Explanation</p>
-                    </div>
-                    <p class="text-sm font-medium text-slate-800 dark:text-zinc-200">
-                        यो तलब विज्ञापनमा भनिएभन्दा थोरै छ। सम्झौतामा हस्ताक्षर गर्नुअघि तलब स्पष्ट पार्नुहोस्।
-                    </p>
-                </div>
-            </div>
-        </div>
-    </details>
+    {% empty %}
+    <div class="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-slate-100 dark:border-zinc-800 text-center">
+        <span class="material-symbols-rounded text-success text-4xl">check_circle</span>
+        <p class="text-sm text-slate-500 mt-2">No flagged clauses found. This contract looks safe!</p>
+    </div>
+    {% endfor %}
 </div>
 
-<!-- Legal Advice CTA -->
-<div class="mt-8 mb-6 bg-slate-900 dark:bg-primary text-white dark:text-slate-900 rounded-3xl p-6 relative overflow-hidden">
+<!-- AI Recommendation -->
+{% if analysis.ai_recommendation %}
+<div class="mt-8 mb-6 {% if analysis.risk_level == 'high' %}bg-slate-900 dark:bg-danger{% elif analysis.risk_level == 'low' %}bg-success dark:bg-success{% else %}bg-warning dark:bg-warning{% endif %} text-white rounded-3xl p-6 relative overflow-hidden">
     <div class="relative z-10">
-        <h3 class="text-lg font-bold mb-1">Need Legal Advice?</h3>
-        <p class="text-white/80 dark:text-slate-900/80 text-sm mb-4">Connect with the Nepali Embassy labor desk directly.</p>
-        <a href="{% url 'main:embassy_contact_directory' %}" class="bg-white/20 dark:bg-black/10 backdrop-blur-sm px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 hover:bg-white/30 transition-colors inline-flex">
-            <span class="material-icons-round text-sm">support_agent</span> Chat with Labor Desk
+        <h3 class="text-lg font-bold mb-1">AI Recommendation</h3>
+        <p class="text-white/90 text-sm mb-4">{{ analysis.ai_recommendation }}</p>
+        <a href="{% url 'main:embassy_contact_directory' %}" class="bg-white/20 backdrop-blur-sm px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 hover:bg-white/30 transition-colors inline-flex">
+            <span class="material-icons-round text-sm">support_agent</span> Contact Embassy
         </a>
     </div>
     <span class="material-icons-round absolute -right-4 -bottom-4 text-[120px] opacity-10">account_balance</span>
 </div>
+{% endif %}
 {% endblock %}

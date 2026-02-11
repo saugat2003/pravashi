@@ -17,20 +17,28 @@
 <!-- Profile Card -->
 <div class="bg-white dark:bg-zinc-900 p-6 rounded-3xl ios-shadow border border-slate-100 dark:border-zinc-800 flex flex-col items-center text-center">
     <div class="relative">
-        <div class="w-24 h-24 rounded-full bg-cover bg-center border-4 border-primary/20" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBBHjFRd862Gvn7G3Y175AZwvUFTb982uxg7pWQgw3of5IaA7oGB815ujCbECS2ev3YH5BlKp9TIq5LTY02tA1pX8Y8ubzAVFq9R_gUkTbGfF_IRYCmqaKjJ-qg-3e6nY1ibUpe5qnKqB-vx9gobwxtO-a0fIdvVjdUVxzzmWeZrGLpqxzpOe1m0xYqXJc0zwIg7dXGMkmxj301wO0oAK7akeLheA5FpEnK9stPONytFAnglYpoQp0SF1t2lSikfSTa_mR48iOm8ZU");'></div>
+        {% if user.photo %}
+        <div class="w-24 h-24 rounded-full bg-cover bg-center border-4 border-primary/20" style='background-image: url("{{ user.photo.url }}")'></div>
+        {% else %}
+        <div class="w-24 h-24 rounded-full bg-primary/10 border-4 border-primary/20 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary text-4xl">person</span>
+        </div>
+        {% endif %}
+        {% if user.is_verified %}
         <div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-success flex items-center justify-center ring-3 ring-white dark:ring-zinc-900">
             <span class="material-icons-round text-white text-sm">check</span>
         </div>
+        {% endif %}
     </div>
-    <h2 class="mt-4 text-xl font-extrabold">Ramesh Thapa</h2>
-    <p class="text-xs text-slate-400 mt-0.5">Worker ID: #NP-88291</p>
+    <h2 class="mt-4 text-xl font-extrabold">{{ user.get_full_name|default:user.username }}</h2>
+    {% if user.worker_id %}<p class="text-xs text-slate-400 mt-0.5">Worker ID: #{{ user.worker_id }}</p>{% endif %}
     <div class="flex items-center gap-1.5 mt-2 text-xs text-slate-500">
         <span class="material-icons-round text-sm">location_on</span>
-        Doha, Qatar
+        {{ user.current_city|default:'Location not set' }}{% if user.current_country %}, {{ user.current_country }}{% endif %}
     </div>
     <div class="flex gap-2 mt-4">
-        <span class="bg-primary/10 text-primary text-[10px] font-bold px-3 py-1 rounded-full">Verified Worker</span>
-        <span class="bg-success/10 text-success text-[10px] font-bold px-3 py-1 rounded-full">Active</span>
+        {% if user.is_verified %}<span class="bg-primary/10 text-primary text-[10px] font-bold px-3 py-1 rounded-full">Verified Worker</span>{% endif %}
+        {% if user.is_active_worker %}<span class="bg-success/10 text-success text-[10px] font-bold px-3 py-1 rounded-full">Active</span>{% endif %}
     </div>
 </div>
 
@@ -46,21 +54,33 @@
                 <span class="material-symbols-outlined text-xl">badge</span>
             </div>
             <span class="text-[10px] font-semibold">Passport</span>
+            {% if passport %}
             <span class="material-icons-round text-success text-xs">check_circle</span>
+            {% else %}
+            <span class="material-icons-round text-slate-300 text-xs">radio_button_unchecked</span>
+            {% endif %}
         </div>
         <div class="bg-white dark:bg-zinc-900 p-3 rounded-2xl ios-shadow border border-slate-100 dark:border-zinc-800 flex flex-col items-center gap-2">
             <div class="w-10 h-10 rounded-xl bg-info/10 dark:bg-info/20 flex items-center justify-center text-info">
                 <span class="material-symbols-outlined text-xl">flight</span>
             </div>
             <span class="text-[10px] font-semibold">Visa</span>
+            {% if visa %}
             <span class="material-icons-round text-success text-xs">check_circle</span>
+            {% else %}
+            <span class="material-icons-round text-slate-300 text-xs">radio_button_unchecked</span>
+            {% endif %}
         </div>
         <div class="bg-white dark:bg-zinc-900 p-3 rounded-2xl ios-shadow border border-slate-100 dark:border-zinc-800 flex flex-col items-center gap-2">
             <div class="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center text-warning">
                 <span class="material-symbols-outlined text-xl">description</span>
             </div>
             <span class="text-[10px] font-semibold">Contract</span>
+            {% if contract %}
+            <span class="material-icons-round text-success text-xs">check_circle</span>
+            {% else %}
             <span class="material-icons-round text-slate-300 text-xs">radio_button_unchecked</span>
+            {% endif %}
         </div>
     </div>
 </section>
@@ -81,9 +101,13 @@
                 <span class="material-icons-round text-primary text-lg">location_on</span>
                 <span class="text-sm font-medium">Location Sharing</span>
             </div>
-            <div class="w-11 h-6 bg-primary rounded-full relative cursor-pointer">
-                <div class="w-5 h-5 bg-white rounded-full absolute right-0.5 top-0.5 shadow-sm"></div>
-            </div>
+            <form method="post" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle_location_sharing"/>
+                <button type="submit" class="w-11 h-6 {{ user.location_sharing|yesno:'bg-primary,bg-slate-200' }} rounded-full relative cursor-pointer">
+                    <div class="w-5 h-5 bg-white rounded-full absolute {{ user.location_sharing|yesno:'right-0.5,left-0.5' }} top-0.5 shadow-sm"></div>
+                </button>
+            </form>
         </div>
         <a href="{% url 'main:daily_safety_check_in' %}" class="flex items-center justify-between px-4 py-3.5">
             <div class="flex items-center gap-3">
@@ -105,7 +129,7 @@
                 <span class="text-sm font-medium">Language</span>
             </div>
             <div class="flex items-center gap-1.5 text-slate-400">
-                <span class="text-xs">English</span>
+                <span class="text-xs">{{ user.get_language_preference_display }}</span>
                 <span class="material-icons-round text-slate-300 dark:text-zinc-600">chevron_right</span>
             </div>
         </div>
@@ -114,9 +138,13 @@
                 <span class="material-icons-round text-slate-500 text-lg">dark_mode</span>
                 <span class="text-sm font-medium">Dark Mode</span>
             </div>
-            <div class="w-11 h-6 bg-slate-200 dark:bg-primary rounded-full relative cursor-pointer">
-                <div class="w-5 h-5 bg-white rounded-full absolute left-0.5 dark:left-auto dark:right-0.5 top-0.5 shadow-sm"></div>
-            </div>
+            <form method="post" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle_dark_mode"/>
+                <button type="submit" class="w-11 h-6 {{ user.dark_mode|yesno:'bg-primary,bg-slate-200' }} rounded-full relative cursor-pointer">
+                    <div class="w-5 h-5 bg-white rounded-full absolute {{ user.dark_mode|yesno:'right-0.5,left-0.5' }} top-0.5 shadow-sm"></div>
+                </button>
+            </form>
         </div>
         <div class="flex items-center justify-between px-4 py-3.5">
             <div class="flex items-center gap-3">
@@ -130,10 +158,10 @@
 
 <!-- Sign Out -->
 <section class="mt-5 mb-6">
-    <button class="w-full py-4 rounded-2xl border-2 border-danger/20 text-danger font-bold text-sm flex items-center justify-center gap-2 hover:bg-danger/5 transition-all active:scale-95">
+    <a href="{% url 'main:logout' %}" class="w-full py-4 rounded-2xl border-2 border-danger/20 text-danger font-bold text-sm flex items-center justify-center gap-2 hover:bg-danger/5 transition-all active:scale-95">
         <span class="material-icons-round">logout</span>
         Sign Out
-    </button>
+    </a>
     <p class="text-center text-[10px] text-slate-400 mt-3">Pradesh Setu v1.0.0 · Made for Nepali Workers</p>
 </section>
 {% endblock %}

@@ -9,30 +9,32 @@
     <div>
         <div class="flex items-center gap-1 mb-1">
             <span class="material-icons-round text-primary text-sm">location_on</span>
-            <span class="text-xs font-semibold opacity-60">Kathmandu, Nepal</span>
+            <span class="text-xs font-semibold opacity-60">{{ user.current_city|default:'Location not set' }}{% if user.current_country %}, {{ user.current_country }}{% endif %}</span>
         </div>
         <h1 class="text-2xl font-extrabold tracking-tight">
-            Namaste, <span class="text-primary">Ramesh</span> 👋
+            Namaste, <span class="text-primary">{{ user.first_name|default:user.username }}</span> 👋
         </h1>
     </div>
     <a href="{% url 'main:safety_notifications' %}" class="relative">
         <div class="w-12 h-12 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center shadow-sm border border-zinc-100 dark:border-zinc-700">
             <span class="material-icons-round text-slate-600 dark:text-slate-300">notifications</span>
         </div>
+        {% if unread_count %}
         <div class="absolute top-0 right-0 w-3 h-3 bg-danger border-2 border-white dark:border-zinc-900 rounded-full"></div>
+        {% endif %}
     </a>
 </header>
 {% endblock %}
 
 {% block content %}
 <!-- Status Card -->
-<div class="mt-6 p-4 bg-primary/10 dark:bg-primary/20 border border-primary/20 rounded-2xl flex items-center gap-3">
-    <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-        <span class="material-icons-round text-white">verified_user</span>
+<div class="mt-6 p-4 {% if docs_up_to_date %}bg-primary/10 dark:bg-primary/20 border border-primary/20{% else %}bg-warning/10 dark:bg-warning/20 border border-warning/20{% endif %} rounded-2xl flex items-center gap-3">
+    <div class="w-10 h-10 {% if docs_up_to_date %}bg-primary{% else %}bg-warning{% endif %} rounded-full flex items-center justify-center">
+        <span class="material-icons-round text-white">{% if docs_up_to_date %}verified_user{% else %}info{% endif %}</span>
     </div>
     <div>
-        <p class="text-[13px] font-bold text-primary">Status: Secure</p>
-        <p class="text-[11px] opacity-70">Your documents are up to date.</p>
+        <p class="text-[13px] font-bold {% if docs_up_to_date %}text-primary{% else %}text-warning{% endif %}">Status: {% if docs_up_to_date %}Secure{% else %}Action Needed{% endif %}</p>
+        <p class="text-[11px] opacity-70">{% if docs_up_to_date %}Your documents are up to date.{% else %}{{ uploaded_docs }}/{{ total_doc_types }} documents uploaded.{% endif %}</p>
     </div>
 </div>
 
@@ -69,18 +71,26 @@
         <h3 class="text-lg font-bold">Embassy Support</h3>
         <a href="{% url 'main:embassy_contact_directory' %}" class="text-xs font-bold text-primary">View All</a>
     </div>
+    {% if nearest_embassy %}
     <div class="bg-white dark:bg-zinc-800 p-4 rounded-xl shadow-sm border border-zinc-100 dark:border-zinc-700 flex items-center gap-4">
-        <img alt="Embassy Flag" class="w-12 h-12 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZ9X-RjY6SLE-WLMMfjsOGdEpHq45EBnGiYnEELsZiXXN9q1Cfjcpmqpcmz8tBiSxP9NKkeLDH6NejabEpMNnkVXBPsXNaQCTg18vSFp0xDbhqUbUhTedgOUlvYmP7-oF7dP_BxoBkCx1TOz5uKWlseE2TmZt6jt_1sOUagPDuZyttUximLufStcJPcGz2otXX3_Dctl4uRqdTPFIcLgY_nVKcQkAEIPLojr2ZWC1--o_R1UUm7JohRxGtN3LFibx7lkMzl8Y0x-8"/>
+        <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-zinc-700 flex items-center justify-center text-2xl">{{ nearest_embassy.flag_emoji|default:'🏛️' }}</div>
         <div class="flex-1">
-            <p class="text-sm font-bold">Embassy of Nepal, Doha</p>
-            <p class="text-[11px] opacity-60">Open: 9:00 AM - 4:00 PM</p>
+            <p class="text-sm font-bold">{{ nearest_embassy.name }}</p>
+            <p class="text-[11px] opacity-60">{{ nearest_embassy.office_hours|default:'Contact for hours' }}</p>
         </div>
+        {% if nearest_embassy.phone %}
         <div class="flex gap-2">
-            <button class="w-9 h-9 bg-zinc-100 dark:bg-zinc-700 rounded-full flex items-center justify-center">
+            <a href="tel:{{ nearest_embassy.phone }}" class="w-9 h-9 bg-zinc-100 dark:bg-zinc-700 rounded-full flex items-center justify-center">
                 <span class="material-icons-round text-sm">call</span>
-            </button>
+            </a>
         </div>
+        {% endif %}
     </div>
+    {% else %}
+    <div class="bg-white dark:bg-zinc-800 p-4 rounded-xl shadow-sm border border-zinc-100 dark:border-zinc-700 text-center">
+        <p class="text-sm text-slate-400">No embassy data available. <a href="{% url 'main:embassy_contact_directory' %}" class="text-primary font-semibold">Browse directory</a></p>
+    </div>
+    {% endif %}
 </div>
 
 <!-- Popular Guides -->

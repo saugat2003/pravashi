@@ -24,9 +24,11 @@
         </div>
         <div class="flex items-center gap-2">
             <div class="relative w-10 h-10">
-                <div class="vault-progress w-full h-full rounded-full flex items-center justify-center">
-                    <div class="w-7 h-7 rounded-full bg-background-light dark:bg-background-dark flex items-center justify-center text-[10px] font-extrabold">2/4</div>
+                {% with total=uploaded_docs|length plus_pending=pending_types|length %}
+                <div class="w-full h-full rounded-full flex items-center justify-center" style="background: conic-gradient(#7CB342 0deg, #7CB342 {{ uploaded_docs|length|floatformat:0 }}deg, #e2e8f0 {{ uploaded_docs|length|floatformat:0 }}deg, #e2e8f0 360deg)">
+                    <div class="w-7 h-7 rounded-full bg-background-light dark:bg-background-dark flex items-center justify-center text-[10px] font-extrabold">{{ uploaded_docs|length }}/{{ doc_total }}</div>
                 </div>
+                {% endwith %}
             </div>
         </div>
     </div>
@@ -38,67 +40,56 @@
 <section>
     <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Uploaded</h2>
     <div class="space-y-3">
-        <!-- Passport -->
+        {% for doc in uploaded_docs %}
         <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl ios-shadow border border-slate-100 dark:border-zinc-800 flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined text-2xl">badge</span>
+            <div class="w-12 h-12 rounded-2xl {% if doc.doc_type == 'passport' %}bg-primary/10 dark:bg-primary/20 text-primary{% elif doc.doc_type == 'visa' %}bg-info/10 dark:bg-info/20 text-info{% elif doc.doc_type == 'contract' %}bg-warning/10 text-warning{% else %}bg-slate-100 dark:bg-zinc-800 text-slate-400{% endif %} flex items-center justify-center">
+                <span class="material-symbols-outlined text-2xl">{% if doc.doc_type == 'passport' %}badge{% elif doc.doc_type == 'visa' %}flight{% elif doc.doc_type == 'contract' %}description{% elif doc.doc_type == 'citizenship' %}id_card{% elif doc.doc_type == 'insurance' %}health_and_safety{% else %}folder{% endif %}</span>
             </div>
             <div class="flex-1">
-                <h3 class="font-bold text-sm">Passport</h3>
-                <p class="text-[11px] text-slate-400 mt-0.5">Uploaded 15 Jan 2025 · Verified</p>
+                <h3 class="font-bold text-sm">{{ doc.get_doc_type_display }}</h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">Uploaded {{ doc.uploaded_at|date:'d M Y' }} · {{ doc.get_verification_status_display }}</p>
             </div>
             <div class="flex items-center gap-2">
+                {% if doc.verification_status == 'verified' %}
                 <span class="material-icons-round text-success text-lg">verified</span>
+                {% elif doc.verification_status == 'pending' %}
+                <span class="material-icons-round text-warning text-lg">pending</span>
+                {% else %}
+                <span class="material-icons-round text-danger text-lg">cancel</span>
+                {% endif %}
                 <span class="material-icons-round text-slate-300 dark:text-zinc-600">chevron_right</span>
             </div>
         </div>
-
-        <!-- Visa -->
-        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl ios-shadow border border-slate-100 dark:border-zinc-800 flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-info/10 dark:bg-info/20 flex items-center justify-center text-info">
-                <span class="material-symbols-outlined text-2xl">flight</span>
-            </div>
-            <div class="flex-1">
-                <h3 class="font-bold text-sm">Work Visa</h3>
-                <p class="text-[11px] text-slate-400 mt-0.5">Uploaded 18 Jan 2025 · Verified</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="material-icons-round text-success text-lg">verified</span>
-                <span class="material-icons-round text-slate-300 dark:text-zinc-600">chevron_right</span>
-            </div>
+        {% empty %}
+        <div class="text-center py-4">
+            <p class="text-sm text-slate-400">No documents uploaded yet.</p>
         </div>
+        {% endfor %}
     </div>
 </section>
 
 <!-- Pending Documents -->
+{% if pending_types %}
 <section class="mt-6">
     <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Pending Upload</h2>
     <div class="space-y-3">
-        <!-- Contract -->
-        <div class="bg-white/60 dark:bg-zinc-900/40 p-4 rounded-2xl border-2 border-dashed border-slate-300 dark:border-zinc-600 flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-warning/10 flex items-center justify-center text-warning">
-                <span class="material-symbols-outlined text-2xl">description</span>
+        {% for pt in pending_types %}
+        <form method="post" enctype="multipart/form-data" class="bg-white/60 dark:bg-zinc-900/40 p-4 rounded-2xl border-2 border-dashed border-slate-300 dark:border-zinc-600 flex items-center gap-4">
+            {% csrf_token %}
+            <input type="hidden" name="doc_type" value="{{ pt.value }}" />
+            <div class="w-12 h-12 rounded-2xl {% if pt.value == 'contract' %}bg-warning/10 text-warning{% elif pt.value == 'citizenship' %}bg-slate-100 dark:bg-zinc-800 text-slate-400{% elif pt.value == 'insurance' %}bg-info/10 text-info{% else %}bg-primary/10 text-primary{% endif %} flex items-center justify-center">
+                <span class="material-symbols-outlined text-2xl">{% if pt.value == 'contract' %}description{% elif pt.value == 'citizenship' %}id_card{% elif pt.value == 'insurance' %}health_and_safety{% elif pt.value == 'passport' %}badge{% elif pt.value == 'visa' %}flight{% else %}folder{% endif %}</span>
             </div>
             <div class="flex-1">
-                <h3 class="font-bold text-sm">Employment Contract</h3>
-                <p class="text-[11px] text-slate-400 mt-0.5">Required for contract analysis</p>
+                <h3 class="font-bold text-sm">{{ pt.label }}</h3>
+                <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required class="text-[11px] text-slate-400 mt-1 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-primary/10 file:text-primary w-full" />
             </div>
-            <button class="bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl active:scale-95 transition-all">Upload</button>
-        </div>
-
-        <!-- Citizenship -->
-        <div class="bg-white/60 dark:bg-zinc-900/40 p-4 rounded-2xl border-2 border-dashed border-slate-300 dark:border-zinc-600 flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-400">
-                <span class="material-symbols-outlined text-2xl">id_card</span>
-            </div>
-            <div class="flex-1">
-                <h3 class="font-bold text-sm">Citizenship Certificate</h3>
-                <p class="text-[11px] text-slate-400 mt-0.5">नागरिकताको प्रमाणपत्र</p>
-            </div>
-            <button class="bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl active:scale-95 transition-all">Upload</button>
-        </div>
+            <button type="submit" class="bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl active:scale-95 transition-all">Upload</button>
+        </form>
+        {% endfor %}
     </div>
 </section>
+{% endif %}
 
 <!-- Security Info -->
 <section class="mt-6 mb-6 p-4 rounded-2xl bg-primary/5 dark:bg-primary/10 border border-primary/20">

@@ -31,16 +31,28 @@
         <div class="w-16 h-16 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
             <span class="text-3xl">👋</span>
         </div>
-        <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Good Morning, Ramesh!</h2>
+        {% if already_checked_in %}
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">You're checked in today!</h2>
+        <p class="text-slate-600 dark:text-slate-400 mb-4">Great job, {{ user.first_name|default:user.username }}. Stay safe!</p>
+        <div class="inline-flex items-center gap-2 bg-primary/20 text-primary font-bold py-3 px-6 rounded-2xl">
+            <span class="material-icons-round">check_circle</span> Checked In
+        </div>
+        {% else %}
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Good Morning, {{ user.first_name|default:user.username }}!</h2>
         <p class="text-slate-600 dark:text-slate-400 mb-8">Are you safe and okay today?</p>
         <div class="space-y-4">
-            <button class="w-full bg-primary hover:bg-opacity-90 text-white font-bold py-5 rounded-2xl shadow-lg transition-transform active:scale-[0.98] flex items-center justify-center gap-2">
-                <span class="material-icons-round">check_circle</span> I Am Safe
-            </button>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="safe" />
+                <button type="submit" class="w-full bg-primary hover:bg-opacity-90 text-white font-bold py-5 rounded-2xl shadow-lg transition-transform active:scale-[0.98] flex items-center justify-center gap-2">
+                    <span class="material-icons-round">check_circle</span> I Am Safe
+                </button>
+            </form>
             <a href="{% url 'main:emergency_sos_activation' %}" class="w-full bg-white dark:bg-zinc-800 text-red-500 font-semibold py-4 rounded-2xl border border-red-100 dark:border-red-900/30 shadow-sm transition-transform active:scale-[0.98] flex items-center justify-center gap-2">
                 <span class="material-icons-round text-[20px]">emergency</span> I Need Help
             </a>
         </div>
+        {% endif %}
     </div>
 </div>
 
@@ -52,59 +64,33 @@
     </div>
     <div class="bg-slate-50 dark:bg-zinc-800/50 rounded-[28px] p-5">
         <div class="grid grid-cols-7 gap-2 text-center">
+            {% for day in week_days %}
             <div class="space-y-2">
-                <span class="text-[10px] font-bold text-slate-400 uppercase">Mon</span>
-                <div class="w-10 h-10 mx-auto rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">11</div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase {% if day.is_today %}text-primary{% endif %}">{{ day.label }}</span>
+                <div class="w-10 h-10 mx-auto rounded-full {% if day.checked_in %}bg-primary text-white{% elif day.is_today %}bg-primary/20 text-primary border-2 border-primary{% else %}bg-slate-200 dark:bg-zinc-700 text-slate-400 dark:text-zinc-500{% endif %} flex items-center justify-center text-sm font-bold {% if day.is_today and day.checked_in %}border-4 border-white dark:border-zinc-800 shadow-md{% endif %}">{{ day.day }}</div>
             </div>
-            <div class="space-y-2">
-                <span class="text-[10px] font-bold text-slate-400 uppercase">Tue</span>
-                <div class="w-10 h-10 mx-auto rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">12</div>
-            </div>
-            <div class="space-y-2">
-                <span class="text-[10px] font-bold text-slate-400 uppercase">Wed</span>
-                <div class="w-10 h-10 mx-auto rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">13</div>
-            </div>
-            <div class="space-y-2">
-                <span class="text-[10px] font-bold text-slate-400 uppercase text-primary">Thu</span>
-                <div class="w-10 h-10 mx-auto rounded-full bg-primary border-4 border-white dark:border-zinc-800 flex items-center justify-center text-white text-sm font-bold shadow-md">14</div>
-            </div>
-            <div class="space-y-2">
-                <span class="text-[10px] font-bold text-slate-400 uppercase">Fri</span>
-                <div class="w-10 h-10 mx-auto rounded-full bg-slate-200 dark:bg-zinc-700 flex items-center justify-center text-slate-400 dark:text-zinc-500 text-sm font-bold">15</div>
-            </div>
-            <div class="space-y-2">
-                <span class="text-[10px] font-bold text-slate-400 uppercase">Sat</span>
-                <div class="w-10 h-10 mx-auto rounded-full bg-slate-200 dark:bg-zinc-700 flex items-center justify-center text-slate-400 dark:text-zinc-500 text-sm font-bold">16</div>
-            </div>
-            <div class="space-y-2">
-                <span class="text-[10px] font-bold text-slate-400 uppercase">Sun</span>
-                <div class="w-10 h-10 mx-auto rounded-full bg-slate-200 dark:bg-zinc-700 flex items-center justify-center text-slate-400 dark:text-zinc-500 text-sm font-bold">17</div>
-            </div>
+            {% endfor %}
         </div>
     </div>
 
     <!-- History Items -->
     <div class="mt-6 space-y-3 mb-6">
+        {% for c in checkins %}
         <div class="flex items-center gap-4 p-4 bg-white dark:bg-zinc-800 rounded-2xl border border-slate-100 dark:border-zinc-700">
-            <div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                <span class="material-icons-round text-primary">verified</span>
+            <div class="w-12 h-12 rounded-full {% if c.status == 'safe' %}bg-primary/20{% else %}bg-danger/20{% endif %} flex items-center justify-center">
+                <span class="material-icons-round {% if c.status == 'safe' %}text-primary{% else %}text-danger{% endif %}">{% if c.status == 'safe' %}verified{% else %}warning{% endif %}</span>
             </div>
             <div class="flex-1">
-                <p class="font-bold text-sm">Yesterday</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Marked as safe at 08:30 AM</p>
+                <p class="font-bold text-sm">{{ c.checked_in_at|date:'F d, Y' }}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Marked as {{ c.get_status_display }} at {{ c.checked_in_at|time:'h:i A' }}</p>
             </div>
-            <span class="text-[10px] px-2 py-1 rounded-full bg-primary/10 text-primary font-bold">SAFE</span>
+            <span class="text-[10px] px-2 py-1 rounded-full {% if c.status == 'safe' %}bg-primary/10 text-primary{% else %}bg-danger/10 text-danger{% endif %} font-bold">{{ c.get_status_display|upper }}</span>
         </div>
-        <div class="flex items-center gap-4 p-4 bg-white dark:bg-zinc-800 rounded-2xl border border-slate-100 dark:border-zinc-700">
-            <div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                <span class="material-icons-round text-primary">verified</span>
-            </div>
-            <div class="flex-1">
-                <p class="font-bold text-sm">March 12, 2024</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Marked as safe at 09:15 AM</p>
-            </div>
-            <span class="text-[10px] px-2 py-1 rounded-full bg-primary/10 text-primary font-bold">SAFE</span>
+        {% empty %}
+        <div class="text-center py-4">
+            <p class="text-sm text-slate-400">No check-in history yet.</p>
         </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}
