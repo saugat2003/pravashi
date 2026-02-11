@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile & Settings - Pradesh Setu{% endblock %}
+
+{% block nav_profile_class %}text-primary font-bold{% endblock %}
+
+{% block header %}
+<header class="sticky top-0 z-20 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 px-6 py-3 flex items-center justify-between">
+    <h1 class="text-xl font-bold tracking-tight">Profile</h1>
+    <button class="w-9 h-9 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center ios-shadow">
+        <span class="material-icons-round text-slate-700 dark:text-slate-300 text-lg">edit</span>
+    </button>
+</header>
+{% endblock %}
+
+{% block content %}
+<!-- Profile Card -->
+<div class="bg-white dark:bg-zinc-900 p-6 rounded-3xl ios-shadow border border-slate-100 dark:border-zinc-800 flex flex-col items-center text-center">
+    <div class="relative">
+        <div class="w-24 h-24 rounded-full bg-cover bg-center border-4 border-primary/20" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBBHjFRd862Gvn7G3Y175AZwvUFTb982uxg7pWQgw3of5IaA7oGB815ujCbECS2ev3YH5BlKp9TIq5LTY02tA1pX8Y8ubzAVFq9R_gUkTbGfF_IRYCmqaKjJ-qg-3e6nY1ibUpe5qnKqB-vx9gobwxtO-a0fIdvVjdUVxzzmWeZrGLpqxzpOe1m0xYqXJc0zwIg7dXGMkmxj301wO0oAK7akeLheA5FpEnK9stPONytFAnglYpoQp0SF1t2lSikfSTa_mR48iOm8ZU");'></div>
+        <div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-success flex items-center justify-center ring-3 ring-white dark:ring-zinc-900">
+            <span class="material-icons-round text-white text-sm">check</span>
+        </div>
+    </div>
+    <h2 class="mt-4 text-xl font-extrabold">Ramesh Thapa</h2>
+    <p class="text-xs text-slate-400 mt-0.5">Worker ID: #NP-88291</p>
+    <div class="flex items-center gap-1.5 mt-2 text-xs text-slate-500">
+        <span class="material-icons-round text-sm">location_on</span>
+        Doha, Qatar
+    </div>
+    <div class="flex gap-2 mt-4">
+        <span class="bg-primary/10 text-primary text-[10px] font-bold px-3 py-1 rounded-full">Verified Worker</span>
+        <span class="bg-success/10 text-success text-[10px] font-bold px-3 py-1 rounded-full">Active</span>
+    </div>
+</div>
+
+<!-- Document Vault Quick Links -->
+<section class="mt-5">
+    <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-sm">My Documents</h3>
+        <a href="{% url 'main:secure_document_vault' %}" class="text-xs text-primary font-semibold">View Vault →</a>
+    </div>
+    <div class="grid grid-cols-3 gap-3">
+        <div class="bg-white dark:bg-zinc-900 p-3 rounded-2xl ios-shadow border border-slate-100 dark:border-zinc-800 flex flex-col items-center gap-2">
+            <div class="w-10 h-10 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-xl">badge</span>
+            </div>
+            <span class="text-[10px] font-semibold">Passport</span>
+            <span class="material-icons-round text-success text-xs">check_circle</span>
+        </div>
+        <div class="bg-white dark:bg-zinc-900 p-3 rounded-2xl ios-shadow border border-slate-100 dark:border-zinc-800 flex flex-col items-center gap-2">
+            <div class="w-10 h-10 rounded-xl bg-info/10 dark:bg-info/20 flex items-center justify-center text-info">
+                <span class="material-symbols-outlined text-xl">flight</span>
+            </div>
+            <span class="text-[10px] font-semibold">Visa</span>
+            <span class="material-icons-round text-success text-xs">check_circle</span>
+        </div>
+        <div class="bg-white dark:bg-zinc-900 p-3 rounded-2xl ios-shadow border border-slate-100 dark:border-zinc-800 flex flex-col items-center gap-2">
+            <div class="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center text-warning">
+                <span class="material-symbols-outlined text-xl">description</span>
+            </div>
+            <span class="text-[10px] font-semibold">Contract</span>
+            <span class="material-icons-round text-slate-300 text-xs">radio_button_unchecked</span>
+        </div>
+    </div>
+</section>
+
+<!-- Safety & Privacy -->
+<section class="mt-5">
+    <h3 class="font-bold text-sm mb-3">Safety & Privacy</h3>
+    <div class="bg-white dark:bg-zinc-900 rounded-2xl ios-shadow border border-slate-100 dark:border-zinc-800 divide-y divide-slate-100 dark:divide-zinc-800">
+        <div class="flex items-center justify-between px-4 py-3.5">
+            <div class="flex items-center gap-3">
+                <span class="material-icons-round text-primary text-lg">person_add</span>
+                <span class="text-sm font-medium">Emergency Contacts</span>
+            </div>
+            <span class="material-icons-round text-slate-300 dark:text-zinc-600">chevron_right</span>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3.5">
+            <div class="flex items-center gap-3">
+                <span class="material-icons-round text-primary text-lg">location_on</span>
+                <span class="text-sm font-medium">Location Sharing</span>
+            </div>
+            <div class="w-11 h-6 bg-primary rounded-full relative cursor-pointer">
+                <div class="w-5 h-5 bg-white rounded-full absolute right-0.5 top-0.5 shadow-sm"></div>
+            </div>
+        </div>
+        <a href="{% url 'main:daily_safety_check_in' %}" class="flex items-center justify-between px-4 py-3.5">
+            <div class="flex items-center gap-3">
+                <span class="material-icons-round text-primary text-lg">schedule</span>
+                <span class="text-sm font-medium">Check-in Reminders</span>
+            </div>
+            <span class="material-icons-round text-slate-300 dark:text-zinc-600">chevron_right</span>
+        </a>
+    </div>
+</section>
+
+<!-- App Preferences -->
+<section class="mt-5">
+    <h3 class="font-bold text-sm mb-3">App Preferences</h3>
+    <div class="bg-white dark:bg-zinc-900 rounded-2xl ios-shadow border border-slate-100 dark:border-zinc-800 divide-y divide-slate-100 dark:divide-zinc-800">
+        <div class="flex items-center justify-between px-4 py-3.5">
+            <div class="flex items-center gap-3">
+                <span class="material-icons-round text-slate-500 text-lg">language</span>
+                <span class="text-sm font-medium">Language</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-slate-400">
+                <span class="text-xs">English</span>
+                <span class="material-icons-round text-slate-300 dark:text-zinc-600">chevron_right</span>
+            </div>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3.5">
+            <div class="flex items-center gap-3">
+                <span class="material-icons-round text-slate-500 text-lg">dark_mode</span>
+                <span class="text-sm font-medium">Dark Mode</span>
+            </div>
+            <div class="w-11 h-6 bg-slate-200 dark:bg-primary rounded-full relative cursor-pointer">
+                <div class="w-5 h-5 bg-white rounded-full absolute left-0.5 dark:left-auto dark:right-0.5 top-0.5 shadow-sm"></div>
+            </div>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3.5">
+            <div class="flex items-center gap-3">
+                <span class="material-icons-round text-slate-500 text-lg">help_outline</span>
+                <span class="text-sm font-medium">Help & Support</span>
+            </div>
+            <span class="material-icons-round text-slate-300 dark:text-zinc-600">chevron_right</span>
+        </div>
+    </div>
+</section>
+
+<!-- Sign Out -->
+<section class="mt-5 mb-6">
+    <button class="w-full py-4 rounded-2xl border-2 border-danger/20 text-danger font-bold text-sm flex items-center justify-center gap-2 hover:bg-danger/5 transition-all active:scale-95">
+        <span class="material-icons-round">logout</span>
+        Sign Out
+    </button>
+    <p class="text-center text-[10px] text-slate-400 mt-3">Pradesh Setu v1.0.0 · Made for Nepali Workers</p>
+</section>
+{% endblock %}
