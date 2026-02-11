@@ -17,15 +17,15 @@
 {% block content %}
 <div class="space-y-6">
     <!-- Search -->
-    <div class="relative group">
+    <form method="get" class="relative group">
         <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
             <span class="material-icons-round text-slate-400">search</span>
         </div>
-        <input class="w-full h-14 pl-12 pr-12 rounded-2xl border-none bg-white dark:bg-card-dark shadow-sm focus:ring-2 focus:ring-primary transition-all text-sm placeholder:text-slate-400" placeholder="Search by city (e.g. Dubai, Doha)" type="text"/>
+        <input name="q" value="{{ request.GET.q|default:'' }}" class="w-full h-14 pl-12 pr-12 rounded-2xl border-none bg-white dark:bg-card-dark shadow-sm focus:ring-2 focus:ring-primary transition-all text-sm placeholder:text-slate-400" placeholder="Search by city (e.g. Dubai, Doha)" type="text"/>
         <div class="absolute inset-y-0 right-4 flex items-center">
-            <span class="material-icons-round text-slate-400">tune</span>
+            <button type="submit" class="material-icons-round text-slate-400 hover:text-primary">tune</button>
         </div>
-    </div>
+    </form>
 
     <!-- Map -->
     <div class="relative w-full h-64 rounded-3xl overflow-hidden shadow-sm border border-slate-200/50 dark:border-slate-800/50">
@@ -46,85 +46,58 @@
     <!-- Nearby Communities -->
     <div class="flex items-center justify-between">
         <h2 class="text-xl font-bold tracking-tight">Nearby Communities</h2>
-        <span class="text-primary text-sm font-semibold">View All</span>
+        <span class="text-primary text-sm font-semibold">{{ communities|length }} Found</span>
     </div>
 
     <div class="space-y-4">
-        <!-- Community 1 -->
+        {% for community in communities %}
         <div class="bg-white dark:bg-card-dark p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-4">
             <div class="flex justify-between items-start">
                 <div class="flex gap-4">
                     <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
-                        <span class="material-icons-round text-primary text-3xl">groups</span>
+                        <span class="material-icons-round text-primary text-3xl">{% if community.community_type == 'welfare' %}volunteer_activism{% elif community.community_type == 'religious' %}temple_buddhist{% elif community.community_type == 'professional' %}work{% else %}groups{% endif %}</span>
                     </div>
                     <div>
-                        <h3 class="font-bold text-lg">Nepali Society UAE</h3>
+                        <h3 class="font-bold text-lg">{{ community.name }}</h3>
                         <div class="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-sm">
                             <span class="material-icons-round text-[16px]">location_on</span>
-                            <span>Dubai International City</span>
+                            <span>{{ community.city }}{% if community.country %}, {{ community.country }}{% endif %}</span>
                         </div>
                     </div>
                 </div>
-                <div class="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-[12px] font-bold text-slate-600 dark:text-slate-400">1.2 km</div>
             </div>
+            {% if community.contact_person or community.operating_hours %}
             <div class="grid grid-cols-2 gap-4 py-2 border-t border-dashed border-slate-200 dark:border-slate-800">
+                {% if community.contact_person %}
                 <div>
                     <p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Contact Person</p>
-                    <p class="font-semibold text-sm">Binod Adhikari</p>
+                    <p class="font-semibold text-sm">{{ community.contact_person }}</p>
                 </div>
+                {% endif %}
+                {% if community.operating_hours %}
                 <div>
                     <p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Available</p>
                     <p class="font-semibold text-sm text-green-500 flex items-center gap-1">
-                        <span class="w-2 h-2 rounded-full bg-green-500"></span> 09:00 - 18:00
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span> {{ community.operating_hours }}
                     </p>
                 </div>
+                {% endif %}
             </div>
+            {% endif %}
             <div class="flex gap-3">
-                <button class="flex-1 h-12 bg-primary text-white rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                {% if community.phone %}
+                <a href="tel:{{ community.phone }}" class="flex-1 h-12 bg-primary text-white rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform">
                     <span class="material-icons-round text-[18px]">call</span> Contact
-                </button>
-                <button class="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl flex items-center justify-center active:scale-95 transition-transform">
-                    <span class="material-icons-round">message</span>
-                </button>
+                </a>
+                {% endif %}
             </div>
         </div>
-
-        <!-- Community 2 -->
-        <div class="bg-white dark:bg-card-dark p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-4">
-            <div class="flex justify-between items-start">
-                <div class="flex gap-4">
-                    <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
-                        <span class="material-icons-round text-primary text-3xl">volunteer_activism</span>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-lg">Everest Welfare Group</h3>
-                        <div class="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-sm">
-                            <span class="material-icons-round text-[16px]">location_on</span>
-                            <span>Al Quoz Industrial 1</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-[12px] font-bold text-slate-600 dark:text-slate-400">3.8 km</div>
-            </div>
-            <div class="grid grid-cols-2 gap-4 py-2 border-t border-dashed border-slate-200 dark:border-slate-800">
-                <div>
-                    <p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Contact Person</p>
-                    <p class="font-semibold text-sm">Sunita Thapa</p>
-                </div>
-                <div>
-                    <p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Response Time</p>
-                    <p class="font-semibold text-sm">&lt; 15 mins</p>
-                </div>
-            </div>
-            <div class="flex gap-3">
-                <button class="flex-1 h-12 bg-primary text-white rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform">
-                    <span class="material-icons-round text-[18px]">call</span> Contact
-                </button>
-                <button class="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl flex items-center justify-center active:scale-95 transition-transform">
-                    <span class="material-icons-round">message</span>
-                </button>
-            </div>
+        {% empty %}
+        <div class="bg-white dark:bg-card-dark p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm text-center">
+            <span class="material-icons-round text-slate-300 text-4xl">search_off</span>
+            <p class="text-sm text-slate-400 mt-2">No communities found. Try a different search.</p>
         </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}

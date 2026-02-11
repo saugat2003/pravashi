@@ -28,12 +28,12 @@
     <div class="flex justify-between items-end mb-3">
         <div>
             <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Your Progress</p>
-            <h2 class="text-lg font-bold">2 of 6 Steps Completed</h2>
+            <h2 class="text-lg font-bold">{{ completed_count }} of {{ total_count }} Steps Completed</h2>
         </div>
-        <span class="text-primary font-bold text-xl">33%</span>
+        <span class="text-primary font-bold text-xl">{{ progress_pct }}%</span>
     </div>
     <div class="w-full bg-slate-200 dark:bg-zinc-700 h-2.5 rounded-full overflow-hidden">
-        <div class="progress-gradient h-full w-1/3 rounded-full"></div>
+        <div class="progress-gradient h-full rounded-full" style="width: {{ progress_pct }}%"></div>
     </div>
 </div>
 
@@ -52,70 +52,46 @@
 <div class="mt-6 space-y-4 mb-6">
     <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">Mandatory Steps</h3>
 
-    <!-- Completed: Visa Verification -->
-    <div class="bg-white dark:bg-zinc-900 p-5 rounded-[28px] ios-shadow flex items-center gap-4 border border-transparent dark:border-zinc-800">
-        <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
-            <span class="material-icons-round text-3xl">verified_user</span>
-        </div>
-        <div class="flex-1">
-            <h4 class="font-bold">Visa Verification</h4>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Check visa authenticity via DOFE</p>
-        </div>
-        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <span class="material-icons-round text-white text-xl">check</span>
-        </div>
-    </div>
-
-    <!-- Completed: Insurance Policy -->
-    <div class="bg-white dark:bg-zinc-900 p-5 rounded-[28px] ios-shadow flex items-center gap-4 border border-transparent dark:border-zinc-800">
-        <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
-            <span class="material-icons-round text-3xl">health_and_safety</span>
-        </div>
-        <div class="flex-1">
-            <h4 class="font-bold">Insurance Policy</h4>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Foreign employment insurance</p>
-        </div>
-        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <span class="material-icons-round text-white text-xl">check</span>
-        </div>
-    </div>
-
-    <!-- Active: Agency License -->
-    <div class="bg-primary p-0.5 rounded-[30px] shadow-lg shadow-primary/20">
-        <div class="bg-white dark:bg-zinc-900 p-5 rounded-[28px] flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center">
-                <span class="material-icons-round text-3xl">business</span>
+    {% for p in progress_items %}
+    {% if p.is_completed %}
+    <!-- Completed Item -->
+    <form method="post" class="block">
+        {% csrf_token %}
+        <input type="hidden" name="item_id" value="{{ p.item.pk }}" />
+        <button type="submit" class="w-full bg-white dark:bg-zinc-900 p-5 rounded-[28px] ios-shadow flex items-center gap-4 border border-transparent dark:border-zinc-800 text-left">
+            <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
+                <span class="material-icons-round text-3xl">{% if p.item.category == 'document' %}description{% elif p.item.category == 'training' %}school{% elif p.item.category == 'legal' %}gavel{% elif p.item.category == 'health' %}health_and_safety{% else %}check_circle{% endif %}</span>
             </div>
             <div class="flex-1">
-                <h4 class="font-bold">Agency License</h4>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Verify recruitment agency status</p>
+                <h4 class="font-bold">{{ p.item.title }}</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400">{{ p.item.description }}</p>
             </div>
-            <button class="text-primary font-bold text-sm px-4 py-2 rounded-full border-2 border-primary/20">Verify</button>
-        </div>
+            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                <span class="material-icons-round text-white text-xl">check</span>
+            </div>
+        </button>
+    </form>
+    {% else %}
+    <!-- Pending Item -->
+    <form method="post" class="block">
+        {% csrf_token %}
+        <input type="hidden" name="item_id" value="{{ p.item.pk }}" />
+        <button type="submit" class="w-full bg-white/60 dark:bg-zinc-900/40 p-5 rounded-[28px] ios-shadow flex items-center gap-4 border border-white dark:border-zinc-800 opacity-80 text-left">
+            <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-400">
+                <span class="material-icons-round text-3xl">{% if p.item.category == 'document' %}description{% elif p.item.category == 'training' %}school{% elif p.item.category == 'legal' %}gavel{% elif p.item.category == 'health' %}health_and_safety{% else %}radio_button_unchecked{% endif %}</span>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-bold text-slate-600 dark:text-slate-400">{{ p.item.title }}</h4>
+                <p class="text-xs text-slate-400 dark:text-slate-500">{{ p.item.description }}</p>
+            </div>
+            <div class="w-8 h-8 rounded-full border-2 border-slate-200 dark:border-zinc-700"></div>
+        </button>
+    </form>
+    {% endif %}
+    {% empty %}
+    <div class="text-center py-4">
+        <p class="text-sm text-slate-400">No checklist items yet. Check back soon!</p>
     </div>
-
-    <!-- Pending: Contract Analysis -->
-    <a href="{% url 'main:contract_analysis_upload' %}" class="bg-white/60 dark:bg-zinc-900/40 p-5 rounded-[28px] ios-shadow flex items-center gap-4 border border-white dark:border-zinc-800 opacity-80 block">
-        <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-400">
-            <span class="material-icons-round text-3xl">description</span>
-        </div>
-        <div class="flex-1">
-            <h4 class="font-bold text-slate-600 dark:text-slate-400">Contract Analysis</h4>
-            <p class="text-xs text-slate-400 dark:text-slate-500">Scan for safety clauses</p>
-        </div>
-        <div class="w-8 h-8 rounded-full border-2 border-slate-200 dark:border-zinc-700"></div>
-    </a>
-
-    <!-- Pending: Orientation -->
-    <div class="bg-white/60 dark:bg-zinc-900/40 p-5 rounded-[28px] ios-shadow flex items-center gap-4 border border-white dark:border-zinc-800 opacity-80">
-        <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-400">
-            <span class="material-icons-round text-3xl">flight_takeoff</span>
-        </div>
-        <div class="flex-1">
-            <h4 class="font-bold text-slate-600 dark:text-slate-400">Orientation Training</h4>
-            <p class="text-xs text-slate-400 dark:text-slate-500">Mandatory pre-departure seminar</p>
-        </div>
-        <div class="w-8 h-8 rounded-full border-2 border-slate-200 dark:border-zinc-700"></div>
-    </div>
+    {% endfor %}
 </div>
 {% endblock %}

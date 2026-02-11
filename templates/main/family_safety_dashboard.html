@@ -32,26 +32,46 @@
 <!-- Safety Status -->
 <section class="flex flex-col items-center pt-4">
     <div class="relative">
-        <div class="h-28 w-28 rounded-full border-4 border-slate-200 dark:border-zinc-700 bg-cover bg-center shadow-xl" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBBHjFRd862Gvn7G3Y175AZwvUFTb982uxg7pWQgw3of5IaA7oGB815ujCbECS2ev3YH5BlKp9TIq5LTY02tA1pX8Y8ubzAVFq9R_gUkTbGfF_IRYCmqaKjJ-qg-3e6nY1ibUpe5qnKqB-vx9gobwxtO-a0fIdvVjdUVxzzmWeZrGLpqxzpOe1m0xYqXJc0zwIg7dXGMkmxj301wO0oAK7akeLheA5FpEnK9stPONytFAnglYpoQp0SF1t2lSikfSTa_mR48iOm8ZU");'></div>
-        <div class="absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-full bg-success ring-4 ring-background-light dark:ring-background-dark">
-            <span class="material-symbols-outlined text-white text-lg">check</span>
+        {% if worker and worker.photo %}
+        <div class="h-28 w-28 rounded-full border-4 border-slate-200 dark:border-zinc-700 bg-cover bg-center shadow-xl" style='background-image: url("{{ worker.photo.url }}")'></div>
+        {% else %}
+        <div class="h-28 w-28 rounded-full border-4 border-slate-200 dark:border-zinc-700 bg-primary/10 shadow-xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary text-5xl">person</span>
+        </div>
+        {% endif %}
+        <div class="absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-full {% if is_safe %}bg-success{% else %}bg-danger{% endif %} ring-4 ring-background-light dark:ring-background-dark">
+            <span class="material-symbols-outlined text-white text-lg">{% if is_safe %}check{% else %}warning{% endif %}</span>
         </div>
     </div>
     <div class="mt-4 text-center">
-        <h2 class="text-2xl font-bold tracking-tight flex items-center justify-center gap-2">Ramesh is Safe</h2>
+        {% if worker %}
+        <h2 class="text-2xl font-bold tracking-tight flex items-center justify-center gap-2">{{ worker.first_name|default:worker.username }} is {% if is_safe %}Safe{% else %}Needs Help{% endif %}</h2>
+        {% if last_checkin %}
         <div class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-slate-100 dark:bg-zinc-800 px-3 py-1 text-xs font-medium text-slate-400 border border-slate-200 dark:border-zinc-700">
-            <span class="material-symbols-outlined text-sm">schedule</span> Last update: 2h ago
+            <span class="material-symbols-outlined text-sm">schedule</span> Last update: {{ last_checkin.checked_in_at|timesince }} ago
         </div>
-        <p class="mt-2 text-sm text-slate-400">Verified via Biometric Scan at Worksite</p>
+        {% endif %}
+        <p class="mt-2 text-sm text-slate-400">{{ worker.current_city|default:'Location not set' }}{% if worker.current_country %}, {{ worker.current_country }}{% endif %}</p>
+        {% else %}
+        <h2 class="text-2xl font-bold tracking-tight">No Worker Linked</h2>
+        <p class="mt-2 text-sm text-slate-400">Ask your family member to link your account.</p>
+        {% endif %}
     </div>
 </section>
 
 <!-- Quick Actions -->
 <section class="grid grid-cols-2 gap-3 mt-6">
+    {% if worker and worker.phone_number %}
+    <a href="tel:{{ worker.phone_number }}" class="flex flex-col items-center justify-center gap-2 rounded-xl bg-primary p-4 text-white shadow-lg shadow-primary/20 active:scale-95 transition-all">
+        <span class="material-symbols-outlined text-3xl">call</span>
+        <span class="font-semibold text-sm">Call {{ worker.first_name|default:'Worker' }}</span>
+    </a>
+    {% else %}
     <button class="flex flex-col items-center justify-center gap-2 rounded-xl bg-primary p-4 text-white shadow-lg shadow-primary/20 active:scale-95 transition-all">
         <span class="material-symbols-outlined text-3xl">call</span>
-        <span class="font-semibold text-sm">Call Ramesh</span>
+        <span class="font-semibold text-sm">Call Worker</span>
     </button>
+    {% endif %}
     <a href="{% url 'main:embassy_contact_directory' %}" class="flex flex-col items-center justify-center gap-2 rounded-xl bg-slate-100 dark:bg-zinc-800 p-4 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-zinc-700 active:scale-95 transition-all">
         <span class="material-symbols-outlined text-3xl">account_balance</span>
         <span class="font-semibold text-sm">Embassy Help</span>
@@ -91,39 +111,24 @@
 <section class="mt-6 mb-6">
     <div class="mb-3 flex items-center justify-between">
         <h3 class="font-semibold text-sm">Recent Activity</h3>
-        <a class="text-xs text-primary" href="#">View all</a>
     </div>
     <div class="flex flex-col gap-3">
+        {% for log in activity_logs %}
         <div class="flex items-start gap-3 rounded-xl bg-white dark:bg-zinc-800 p-3 border border-slate-100 dark:border-zinc-700">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-success/20 text-success">
-                <span class="material-symbols-outlined text-xl">verified_user</span>
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg {% if log.event_type == 'checkin' %}bg-success/20 text-success{% elif log.event_type == 'sos' %}bg-danger/20 text-danger{% elif log.event_type == 'document' %}bg-warning/20 text-warning{% elif log.event_type == 'contract' %}bg-info/20 text-info{% else %}bg-primary/20 text-primary{% endif %}">
+                <span class="material-symbols-outlined text-xl">{% if log.event_type == 'checkin' %}verified_user{% elif log.event_type == 'sos' %}emergency{% elif log.event_type == 'document' %}article{% elif log.event_type == 'contract' %}description{% else %}info{% endif %}</span>
             </div>
             <div class="flex-1">
-                <p class="text-sm font-semibold">Safety Check-in</p>
-                <p class="text-xs text-slate-400 mt-0.5">Biometric verification successful.</p>
+                <p class="text-sm font-semibold">{{ log.description }}</p>
+                <p class="text-xs text-slate-400 mt-0.5">{{ log.created_at|date:'M d, Y h:i A' }}</p>
             </div>
-            <span class="text-[10px] font-medium text-slate-500 whitespace-nowrap">2h ago</span>
+            <span class="text-[10px] font-medium text-slate-500 whitespace-nowrap">{{ log.created_at|timesince }} ago</span>
         </div>
-        <div class="flex items-start gap-3 rounded-xl bg-white dark:bg-zinc-800 p-3 border border-slate-100 dark:border-zinc-700">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/20 text-primary">
-                <span class="material-symbols-outlined text-xl">work</span>
-            </div>
-            <div class="flex-1">
-                <p class="text-sm font-semibold">Arrived at Site</p>
-                <p class="text-xs text-slate-400 mt-0.5">Location: Al Rayyan Stadium Construction.</p>
-            </div>
-            <span class="text-[10px] font-medium text-slate-500 whitespace-nowrap">8:00 AM</span>
+        {% empty %}
+        <div class="text-center py-4">
+            <p class="text-sm text-slate-400">No activity recorded yet.</p>
         </div>
-        <div class="flex items-start gap-3 rounded-xl bg-white dark:bg-zinc-800 p-3 border border-slate-100 dark:border-zinc-700">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-warning/20 text-warning">
-                <span class="material-symbols-outlined text-xl">article</span>
-            </div>
-            <div class="flex-1">
-                <p class="text-sm font-semibold">Contract Updated</p>
-                <p class="text-xs text-slate-400 mt-0.5">New insurance policy added.</p>
-            </div>
-            <span class="text-[10px] font-medium text-slate-500 whitespace-nowrap">Yesterday</span>
-        </div>
+        {% endfor %}
     </div>
 </section>
 {% endblock %}

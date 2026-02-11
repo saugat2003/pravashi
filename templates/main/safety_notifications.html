@@ -20,105 +20,81 @@
             </button>
             <h1 class="text-lg font-bold tracking-tight">Notifications</h1>
         </div>
-        <button class="text-xs text-primary font-semibold">Mark all read</button>
+        <form method="post" action="?mark_all_read=1" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="text-xs text-primary font-semibold">Mark all read</button>
+        </form>
     </div>
     <!-- Filter Tabs -->
     <div class="flex gap-2 mt-3 overflow-x-auto no-scrollbar">
-        <button class="tab-active px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all">All</button>
-        <button class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-slate-300 transition-all">Safety</button>
-        <button class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-slate-300 transition-all">Check‑ins</button>
-        <button class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-slate-300 transition-all">Community</button>
+        <a href="{% url 'main:safety_notifications' %}" class="{% if not request.GET.category %}tab-active{% else %}bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-slate-300{% endif %} px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all">All</a>
+        <a href="{% url 'main:safety_notifications' %}?category=safety" class="{% if request.GET.category == 'safety' %}tab-active{% else %}bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-slate-300{% endif %} px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all">Safety</a>
+        <a href="{% url 'main:safety_notifications' %}?category=checkin" class="{% if request.GET.category == 'checkin' %}tab-active{% else %}bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-slate-300{% endif %} px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all">Check‑ins</a>
+        <a href="{% url 'main:safety_notifications' %}?category=community" class="{% if request.GET.category == 'community' %}tab-active{% else %}bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-slate-300{% endif %} px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all">Community</a>
     </div>
 </header>
 {% endblock %}
 
 {% block content %}
-<!-- Today -->
+<!-- Notifications -->
 <section>
+    {% if today_notifications %}
     <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Today</h2>
     <div class="space-y-3">
-        <!-- Safety Alert -->
-        <div class="bg-danger/5 dark:bg-danger/10 p-4 rounded-2xl border border-danger/20 flex items-start gap-3">
-            <div class="w-10 h-10 rounded-xl bg-danger/20 flex items-center justify-center text-danger shrink-0">
-                <span class="material-icons-round text-xl">warning</span>
+        {% for n in today_notifications %}
+        <div class="{% if not n.is_read %}{% if n.category == 'safety' or n.category == 'sos' %}bg-danger/5 dark:bg-danger/10 border-danger/20{% else %}bg-white dark:bg-zinc-900 border-slate-100 dark:border-zinc-800{% endif %}{% else %}bg-white dark:bg-zinc-900 border-slate-100 dark:border-zinc-800 opacity-70{% endif %} p-4 rounded-2xl border flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl {% if n.category == 'safety' or n.category == 'sos' %}bg-danger/20 text-danger{% elif n.category == 'checkin' %}bg-primary/10 dark:bg-primary/20 text-primary{% elif n.category == 'community' %}bg-info/10 dark:bg-info/20 text-info{% elif n.category == 'contract' %}bg-success/10 text-success{% elif n.category == 'document' %}bg-warning/10 text-warning{% else %}bg-slate-100 text-slate-500{% endif %} flex items-center justify-center shrink-0">
+                <span class="material-icons-round text-xl">{% if n.category == 'safety' or n.category == 'sos' %}warning{% elif n.category == 'checkin' %}schedule{% elif n.category == 'community' %}groups{% elif n.category == 'contract' %}verified{% elif n.category == 'document' %}folder{% else %}notifications{% endif %}</span>
             </div>
             <div class="flex-1">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-danger">Safety Alert</span>
-                    <span class="text-[10px] text-slate-400">10 min ago</span>
+                    <span class="text-xs font-bold {% if n.category == 'safety' or n.category == 'sos' %}text-danger{% elif n.category == 'checkin' %}text-primary{% elif n.category == 'community' %}text-info{% elif n.category == 'contract' %}text-success{% elif n.category == 'document' %}text-warning{% else %}text-slate-500{% endif %}">{{ n.get_category_display }}</span>
+                    <span class="text-[10px] text-slate-400">{{ n.created_at|timesince }} ago</span>
                 </div>
-                <p class="text-sm font-semibold mt-1">Heat Advisory in Doha</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Temperature exceeding 45°C. Limit outdoor work.</p>
-                <button class="mt-2 text-xs font-bold text-danger">View Safety Tips →</button>
+                <p class="text-sm font-semibold mt-1">{{ n.title }}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ n.description }}</p>
+                {% if not n.is_read %}
+                <form method="post" class="inline mt-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="mark_read" value="{{ n.pk }}" />
+                    <button type="submit" class="text-xs font-bold text-primary">Mark as read</button>
+                </form>
+                {% endif %}
             </div>
         </div>
-
-        <!-- Check-in Reminder -->
-        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-100 dark:border-zinc-800 flex items-start gap-3">
-            <div class="w-10 h-10 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary shrink-0">
-                <span class="material-icons-round text-xl">schedule</span>
-            </div>
-            <div class="flex-1">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-primary">Reminder</span>
-                    <span class="text-[10px] text-slate-400">2h ago</span>
-                </div>
-                <p class="text-sm font-semibold mt-1">Daily Safety Check-in</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Let your family know you're safe.</p>
-                <a href="{% url 'main:daily_safety_check_in' %}" class="mt-2 inline-flex items-center gap-1 bg-primary text-white text-xs font-bold px-4 py-2 rounded-xl active:scale-95 transition-all">
-                    Check In Now
-                </a>
-            </div>
-        </div>
-
-        <!-- Community -->
-        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-100 dark:border-zinc-800 flex items-start gap-3">
-            <div class="w-10 h-10 rounded-xl bg-info/10 dark:bg-info/20 flex items-center justify-center text-info shrink-0">
-                <span class="material-icons-round text-xl">groups</span>
-            </div>
-            <div class="flex-1">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-info">Community</span>
-                    <span class="text-[10px] text-slate-400">5h ago</span>
-                </div>
-                <p class="text-sm font-semibold mt-1">New Community Event</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Nepali Community Gathering this Saturday at Al Sadd.</p>
-            </div>
-        </div>
+        {% endfor %}
     </div>
+    {% endif %}
 </section>
 
 <!-- Earlier -->
+{% if earlier_notifications %}
 <section class="mt-6 mb-6">
     <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Earlier</h2>
     <div class="space-y-3">
+        {% for n in earlier_notifications %}
         <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-100 dark:border-zinc-800 flex items-start gap-3 opacity-70">
-            <div class="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success shrink-0">
-                <span class="material-icons-round text-xl">verified</span>
+            <div class="w-10 h-10 rounded-xl {% if n.category == 'safety' or n.category == 'sos' %}bg-danger/20 text-danger{% elif n.category == 'checkin' %}bg-primary/10 text-primary{% elif n.category == 'community' %}bg-info/10 text-info{% elif n.category == 'contract' %}bg-success/10 text-success{% elif n.category == 'document' %}bg-warning/10 text-warning{% else %}bg-slate-100 text-slate-500{% endif %} flex items-center justify-center shrink-0">
+                <span class="material-icons-round text-xl">{% if n.category == 'safety' or n.category == 'sos' %}warning{% elif n.category == 'checkin' %}schedule{% elif n.category == 'community' %}groups{% elif n.category == 'contract' %}verified{% elif n.category == 'document' %}folder{% else %}notifications{% endif %}</span>
             </div>
             <div class="flex-1">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-success">Contract</span>
-                    <span class="text-[10px] text-slate-400">Yesterday</span>
+                    <span class="text-xs font-bold {% if n.category == 'safety' %}text-danger{% elif n.category == 'contract' %}text-success{% elif n.category == 'document' %}text-warning{% else %}text-slate-500{% endif %}">{{ n.get_category_display }}</span>
+                    <span class="text-[10px] text-slate-400">{{ n.created_at|timesince }} ago</span>
                 </div>
-                <p class="text-sm font-semibold mt-1">Contract Analysis Complete</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">2 clauses flagged for review.</p>
+                <p class="text-sm font-semibold mt-1">{{ n.title }}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ n.description }}</p>
             </div>
         </div>
-
-        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-100 dark:border-zinc-800 flex items-start gap-3 opacity-70">
-            <div class="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center text-warning shrink-0">
-                <span class="material-icons-round text-xl">folder</span>
-            </div>
-            <div class="flex-1">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-warning">Document</span>
-                    <span class="text-[10px] text-slate-400">2 days ago</span>
-                </div>
-                <p class="text-sm font-semibold mt-1">Document Uploaded</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Your passport copy was securely stored.</p>
-            </div>
-        </div>
+        {% endfor %}
     </div>
 </section>
+{% endif %}
+
+{% if not today_notifications and not earlier_notifications %}
+<div class="text-center py-12">
+    <span class="material-icons-round text-slate-300 text-5xl">notifications_off</span>
+    <p class="text-sm text-slate-400 mt-3">No notifications yet. You're all caught up!</p>
+</div>
+{% endif %}
 {% endblock %}
