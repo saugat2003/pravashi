@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Daily Safety Check-In{% endblock %}
+
+{% block extra_head %}
+<style>
+    .status-dot-safe {
+        background-color: #7CB342;
+        box-shadow: 0 0 10px rgba(124, 179, 66, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="px-6 py-4 flex justify-between items-center">
+    <button onclick="history.back()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center">
+        <span class="material-icons-round text-slate-600 dark:text-slate-300">chevron_left</span>
+    </button>
+    <h1 class="text-lg font-bold">Safety Check</h1>
+    <a href="{% url 'main:safety_notifications' %}" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center">
+        <span class="material-icons-round text-slate-600 dark:text-slate-300">notifications_none</span>
+    </a>
+</header>
+{% endblock %}
+
+{% block content %}
+<!-- Check-in Card -->
+<div class="mt-4 p-8 rounded-[32px] bg-[#E8F5E9] dark:bg-emerald-950/30 text-center relative overflow-hidden">
+    <div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full"></div>
+    <div class="relative z-10">
+        <div class="w-16 h-16 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+            <span class="text-3xl">👋</span>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Good Morning, Ramesh!</h2>
+        <p class="text-slate-600 dark:text-slate-400 mb-8">Are you safe and okay today?</p>
+        <div class="space-y-4">
+            <button class="w-full bg-primary hover:bg-opacity-90 text-white font-bold py-5 rounded-2xl shadow-lg transition-transform active:scale-[0.98] flex items-center justify-center gap-2">
+                <span class="material-icons-round">check_circle</span> I Am Safe
+            </button>
+            <a href="{% url 'main:emergency_sos_activation' %}" class="w-full bg-white dark:bg-zinc-800 text-red-500 font-semibold py-4 rounded-2xl border border-red-100 dark:border-red-900/30 shadow-sm transition-transform active:scale-[0.98] flex items-center justify-center gap-2">
+                <span class="material-icons-round text-[20px]">emergency</span> I Need Help
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Check-in History -->
+<div class="mt-10">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-lg">Check-in History</h3>
+        <button class="text-primary font-medium text-sm">March 2024</button>
+    </div>
+    <div class="bg-slate-50 dark:bg-zinc-800/50 rounded-[28px] p-5">
+        <div class="grid grid-cols-7 gap-2 text-center">
+            <div class="space-y-2">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Mon</span>
+                <div class="w-10 h-10 mx-auto rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">11</div>
+            </div>
+            <div class="space-y-2">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Tue</span>
+                <div class="w-10 h-10 mx-auto rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">12</div>
+            </div>
+            <div class="space-y-2">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Wed</span>
+                <div class="w-10 h-10 mx-auto rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">13</div>
+            </div>
+            <div class="space-y-2">
+                <span class="text-[10px] font-bold text-slate-400 uppercase text-primary">Thu</span>
+                <div class="w-10 h-10 mx-auto rounded-full bg-primary border-4 border-white dark:border-zinc-800 flex items-center justify-center text-white text-sm font-bold shadow-md">14</div>
+            </div>
+            <div class="space-y-2">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Fri</span>
+                <div class="w-10 h-10 mx-auto rounded-full bg-slate-200 dark:bg-zinc-700 flex items-center justify-center text-slate-400 dark:text-zinc-500 text-sm font-bold">15</div>
+            </div>
+            <div class="space-y-2">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Sat</span>
+                <div class="w-10 h-10 mx-auto rounded-full bg-slate-200 dark:bg-zinc-700 flex items-center justify-center text-slate-400 dark:text-zinc-500 text-sm font-bold">16</div>
+            </div>
+            <div class="space-y-2">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Sun</span>
+                <div class="w-10 h-10 mx-auto rounded-full bg-slate-200 dark:bg-zinc-700 flex items-center justify-center text-slate-400 dark:text-zinc-500 text-sm font-bold">17</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Items -->
+    <div class="mt-6 space-y-3 mb-6">
+        <div class="flex items-center gap-4 p-4 bg-white dark:bg-zinc-800 rounded-2xl border border-slate-100 dark:border-zinc-700">
+            <div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <span class="material-icons-round text-primary">verified</span>
+            </div>
+            <div class="flex-1">
+                <p class="font-bold text-sm">Yesterday</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Marked as safe at 08:30 AM</p>
+            </div>
+            <span class="text-[10px] px-2 py-1 rounded-full bg-primary/10 text-primary font-bold">SAFE</span>
+        </div>
+        <div class="flex items-center gap-4 p-4 bg-white dark:bg-zinc-800 rounded-2xl border border-slate-100 dark:border-zinc-700">
+            <div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <span class="material-icons-round text-primary">verified</span>
+            </div>
+            <div class="flex-1">
+                <p class="font-bold text-sm">March 12, 2024</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Marked as safe at 09:15 AM</p>
+            </div>
+            <span class="text-[10px] px-2 py-1 rounded-full bg-primary/10 text-primary font-bold">SAFE</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
