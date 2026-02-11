@@ -2,32 +2,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}The Debuggers{% endblock %}</title>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>{% block title %}Pradesh Setu{% endblock %}</title>
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    {% block extra_css %}{% endblock %}
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+    <!-- Material Icons (all variants) -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+    <!-- Unified Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#7CB342",
+                        "primary-dark": "#5A8A1E",
+                        "background-light": "#F9F6F2",
+                        "background-dark": "#121412",
+                        "card-light": "#FFFFFF",
+                        "card-dark": "#1A1D19",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#1C1E17",
+                        accent: "#8DB600",
+                        danger: "#EF4444",
+                        warning: "#FFB347",
+                        success: "#22C55E",
+                        info: "#137FEC",
+                    },
+                    fontFamily: {
+                        display: ["Plus Jakarta Sans", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "1.5rem",
+                        xl: "2rem",
+                        "2xl": "2.5rem",
+                        "3xl": "3rem",
+                    },
+                },
+            },
+        };
+    </script>
+
+    <!-- Unified Styles -->
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-rounded {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ios-blur {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .ios-shadow {
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06);
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-nav {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.85);
+        }
+        .dark .glass-nav {
+            background: rgba(18, 20, 18, 0.85);
+        }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 16px); }
+    </style>
+
+    {% block extra_head %}{% endblock %}
 </head>
-<body>
-    <nav>
-        <div class="nav-container">
-            <a href="{% url 'main:home' %}" class="nav-brand">The Debuggers</a>
-        </div>
-    </nav>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex justify-center {% block body_class %}{% endblock %}">
 
-    <main>
-        {% block content %}
+    <!-- Mobile App Shell -->
+    <div class="relative w-full max-w-[430px] min-h-screen bg-background-light dark:bg-background-dark overflow-hidden flex flex-col">
+
+        {% block statusbar %}{% endblock %}
+
+        {% block header %}{% endblock %}
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto hide-scrollbar {% block main_class %}px-6 pb-28{% endblock %}">
+            {% block content %}{% endblock %}
+        </main>
+
+        {% block bottom_nav %}
+        <!-- Bottom Navigation -->
+        <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] glass-nav border-t border-slate-100 dark:border-slate-800 px-6 pt-3 pb-5 safe-bottom z-50">
+            <div class="flex items-center justify-between">
+                <a href="{% url 'main:home' %}" class="flex flex-col items-center gap-1 {% block nav_home_class %}text-slate-400 dark:text-slate-500 hover:text-primary{% endblock %} transition-colors">
+                    <span class="material-icons-round text-[22px]">home</span>
+                    <span class="text-[10px] font-bold">Home</span>
+                </a>
+                <a href="{% url 'main:contract_analysis_upload' %}" class="flex flex-col items-center gap-1 {% block nav_docs_class %}text-slate-400 dark:text-slate-500 hover:text-primary{% endblock %} transition-colors">
+                    <span class="material-icons-round text-[22px]">description</span>
+                    <span class="text-[10px] font-bold">Contracts</span>
+                </a>
+                <a href="{% url 'main:emergency_sos_activation' %}" class="flex flex-col items-center gap-1 {% block nav_sos_class %}text-slate-400 dark:text-slate-500 hover:text-danger{% endblock %} transition-colors">
+                    <span class="material-icons-round text-[22px]">sos</span>
+                    <span class="text-[10px] font-bold">SOS</span>
+                </a>
+                <a href="{% url 'main:embassy_contact_directory' %}" class="flex flex-col items-center gap-1 {% block nav_embassy_class %}text-slate-400 dark:text-slate-500 hover:text-primary{% endblock %} transition-colors">
+                    <span class="material-icons-round text-[22px]">support_agent</span>
+                    <span class="text-[10px] font-bold">Help</span>
+                </a>
+                <a href="{% url 'main:worker_profile_settings' %}" class="flex flex-col items-center gap-1 {% block nav_profile_class %}text-slate-400 dark:text-slate-500 hover:text-primary{% endblock %} transition-colors">
+                    <span class="material-icons-round text-[22px]">person</span>
+                    <span class="text-[10px] font-bold">Profile</span>
+                </a>
+            </div>
+        </nav>
         {% endblock %}
-    </main>
+    </div>
 
-    <footer>
-        <p>&copy; 2026 The Debuggers — Sankalpa Hackathon</p>
-    </footer>
-
-    <!-- JavaScript -->
-    <script src="{% static 'js/main.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
