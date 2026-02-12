@@ -107,24 +107,20 @@
         </main>
 
         {% block bottom_nav %}
-        <!-- Bottom Navigation -->
+        <!-- Bottom Navigation: Home | Support | Education | Profile -->
         <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] glass-nav border-t border-slate-100 dark:border-slate-800 px-6 pt-3 pb-5 safe-bottom z-50">
             <div class="flex items-center justify-between">
                 <a href="{% url 'main:home' %}" class="flex flex-col items-center gap-1 {% block nav_home_class %}text-slate-400 dark:text-slate-500 hover:text-primary{% endblock %} transition-colors">
                     <span class="material-icons-round text-[22px]">home</span>
                     <span class="text-[10px] font-bold">Home</span>
                 </a>
-                <a href="{% url 'main:contract_analysis_upload' %}" class="flex flex-col items-center gap-1 {% block nav_docs_class %}text-slate-400 dark:text-slate-500 hover:text-primary{% endblock %} transition-colors">
-                    <span class="material-icons-round text-[22px]">description</span>
-                    <span class="text-[10px] font-bold">Contracts</span>
-                </a>
-                <a href="{% url 'main:emergency_sos_activation' %}" class="flex flex-col items-center gap-1 {% block nav_sos_class %}text-slate-400 dark:text-slate-500 hover:text-danger{% endblock %} transition-colors">
-                    <span class="material-icons-round text-[22px]">sos</span>
-                    <span class="text-[10px] font-bold">SOS</span>
-                </a>
-                <a href="{% url 'main:embassy_contact_directory' %}" class="flex flex-col items-center gap-1 {% block nav_embassy_class %}text-slate-400 dark:text-slate-500 hover:text-primary{% endblock %} transition-colors">
+                <a href="{% url 'main:embassy_contact_directory' %}" class="flex flex-col items-center gap-1 {% block nav_support_class %}text-slate-400 dark:text-slate-500 hover:text-primary{% endblock %} transition-colors">
                     <span class="material-icons-round text-[22px]">support_agent</span>
-                    <span class="text-[10px] font-bold">Help</span>
+                    <span class="text-[10px] font-bold">Support</span>
+                </a>
+                <a href="{% url 'main:migration_checklist_education' %}" class="flex flex-col items-center gap-1 {% block nav_education_class %}text-slate-400 dark:text-slate-500 hover:text-primary{% endblock %} transition-colors">
+                    <span class="material-icons-round text-[22px]">menu_book</span>
+                    <span class="text-[10px] font-bold">Pre-Departure</span>
                 </a>
                 <a href="{% url 'main:worker_profile_settings' %}" class="flex flex-col items-center gap-1 {% block nav_profile_class %}text-slate-400 dark:text-slate-500 hover:text-primary{% endblock %} transition-colors">
                     <span class="material-icons-round text-[22px]">person</span>
