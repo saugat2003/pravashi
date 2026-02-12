@@ -663,39 +663,36 @@ def community_locator(request):
 @login_required(login_url='main:login')
 def migration_checklist_education(request):
     user = request.user
+    REQUIRED_DOCUMENTS_COUNT = 10
 
-    # Ensure progress entries exist for all checklist items
-    for item in ChecklistItem.objects.all():
-        UserChecklistProgress.objects.get_or_create(user=user, item=item)
+    # Handle AJAX requests for checkbox updates
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        document_id = request.POST.get('document_id')
+        is_checked = request.POST.get('is_checked') == 'true'
+        
+        # Store in session
+        if 'completed_documents' not in request.session:
+            request.session['completed_documents'] = {}
+        
+        request.session['completed_documents'][document_id] = is_checked
+        request.session.modified = True
+        
+        completed_count = sum(1 for v in request.session.get('completed_documents', {}).values() if v)
+        return JsonResponse({
+            'completed_count': completed_count,
+            'progress_pct': int((completed_count / REQUIRED_DOCUMENTS_COUNT) * 100)
+        })
 
-    if request.method == 'POST':
-        item_id = request.POST.get('item_id')
-        progress = get_object_or_404(UserChecklistProgress, user=user, item_id=item_id)
-        if progress.status == 'completed':
-            progress.status = 'pending'
-            progress.completed_at = None
-        else:
-            progress.status = 'completed'
-            progress.completed_at = timezone.now()
-        progress.save()
-        return redirect('main:migration_checklist_education')
-
-    progress_items = UserChecklistProgress.objects.filter(user=user).select_related('item')
-    completed_count = progress_items.filter(status='completed').count()
-    total_count = progress_items.count()
-    progress_pct = int((completed_count / total_count) * 100) if total_count > 0 else 0
-
-    # Add is_completed flag to each progress item
-    progress_list = []
-    for p in progress_items:
-        p.is_completed = (p.status == 'completed')
-        progress_list.append(p)
+    # Regular page load
+    completed_documents = request.session.get('completed_documents', {})
+    completed_count = sum(1 for v in completed_documents.values() if v)
+    progress_pct = int((completed_count / REQUIRED_DOCUMENTS_COUNT) * 100) if REQUIRED_DOCUMENTS_COUNT > 0 else 0
 
     context = {
-        'progress_items': progress_list,
         'completed_count': completed_count,
-        'total_count': total_count,
+        'total_count': REQUIRED_DOCUMENTS_COUNT,
         'progress_pct': progress_pct,
+        'completed_documents': completed_documents,
         'unread_count': _unread_count(user),
     }
     return render(request, 'main/migration_checklist_education.html', context)

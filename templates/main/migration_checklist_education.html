@@ -23,6 +23,47 @@
         content.classList.toggle('open');
         icon.style.transform = content.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
     }
+
+    function updateCheckbox(checkbox, documentId) {
+        const isChecked = checkbox.checked;
+        
+        // Send AJAX request to update progress
+        fetch('{% url "main:migration_checklist_education" %}', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                'document_id': documentId,
+                'is_checked': isChecked
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update progress display
+            document.querySelector('.progress-count').textContent = data.completed_count + ' of 10 Steps Completed';
+            document.querySelector('.progress-pct').textContent = data.progress_pct + '%';
+            const progressBar = document.querySelector('.progress-gradient');
+            progressBar.style.width = data.progress_pct + '%';
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Initialize checkboxes from session on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const completedDocs = {{ completed_documents|safe }};
+        document.querySelectorAll('input[type="checkbox"]').forEach((checkbox, index) => {
+            const docId = 'doc_' + index;
+            if (completedDocs[docId]) {
+                checkbox.checked = true;
+            }
+            checkbox.addEventListener('change', function() {
+                updateCheckbox(this, docId);
+            });
+        });
+    });
 </script>
 {% endblock %}
 
@@ -44,9 +85,9 @@
     <div class="flex justify-between items-end mb-3">
         <div>
             <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Your Progress</p>
-            <h2 class="text-lg font-bold">{{ completed_count }} of {{ total_count }} Steps Completed</h2>
+            <h2 class="text-lg font-bold progress-count">{{ completed_count }} of 10 Steps Completed</h2>
         </div>
-        <span class="text-primary font-bold text-xl">{{ progress_pct }}%</span>
+        <span class="text-primary font-bold text-xl progress-pct">{{ progress_pct }}%</span>
     </div>
     <div class="w-full bg-slate-200 dark:bg-zinc-700 h-2.5 rounded-full overflow-hidden">
         <div class="progress-gradient h-full rounded-full" style="width: {{ progress_pct }}%"></div>
@@ -75,7 +116,7 @@
                 <span class="material-icons-round text-3xl">description</span>
             </div>
             <div class="flex-1">
-                <h4 class="font-bold">वैध राहदानी (Passport)</h4>
+                <h4 class="font-bold">राहदानी (Passport)</h4>
             </div>
             <div class="flex items-center gap-2">
                 <input type="checkbox" class="w-5 h-5 rounded border-slate-300 cursor-pointer">
@@ -114,7 +155,7 @@
     <div class="bg-white dark:bg-zinc-900 rounded-[28px] ios-shadow border border-white dark:border-zinc-800">
         <button onclick="toggleDetail(this)" class="w-full p-5 flex items-center gap-4 text-left">
             <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
-                <span class="material-icons-round text-3xl">contract</span>
+                <span class="material-icons-round text-3xl">handshake</span>
             </div>
             <div class="flex-1">
                 <h4 class="font-bold">रोजगार सम्झौता (Employment Contract)</h4>
