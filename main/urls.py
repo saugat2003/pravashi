@@ -22,6 +22,9 @@ urlpatterns = [
 
     # Documents
     path('document-vault/', views.secure_document_vault, name='secure_document_vault'),
+    path('document/upload/', views.document_upload_ajax, name='document_upload_ajax'),
+    path('document/<int:pk>/download/', views.document_download, name='document_download'),
+    path('document/<int:pk>/delete/', views.document_delete, name='document_delete'),
 
     # Contract Analysis
     path('contract-analysis/', views.contract_analysis_upload, name='contract_analysis_upload'),
