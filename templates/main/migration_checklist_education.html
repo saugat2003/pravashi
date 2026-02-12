@@ -7,7 +7,64 @@
     .progress-gradient {
         background: linear-gradient(90deg, #7CB342 0%, #AED581 100%);
     }
+    .detail-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+    }
+    .detail-content.open {
+        max-height: 500px;
+    }
 </style>
+<script>
+    function toggleDetail(button) {
+        const content = button.nextElementSibling;
+        const icon = button.querySelector('.expand-icon');
+        content.classList.toggle('open');
+        icon.style.transform = content.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+
+    function updateCheckbox(checkbox, documentId) {
+        const isChecked = checkbox.checked;
+        
+        // Send AJAX request to update progress
+        fetch('{% url "main:migration_checklist_education" %}', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                'document_id': documentId,
+                'is_checked': isChecked
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update progress display
+            document.querySelector('.progress-count').textContent = data.completed_count + ' of 10 Steps Completed';
+            document.querySelector('.progress-pct').textContent = data.progress_pct + '%';
+            const progressBar = document.querySelector('.progress-gradient');
+            progressBar.style.width = data.progress_pct + '%';
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Initialize checkboxes from session on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const completedDocs = {{ completed_documents|safe }};
+        document.querySelectorAll('input[type="checkbox"]').forEach((checkbox, index) => {
+            const docId = 'doc_' + index;
+            if (completedDocs[docId]) {
+                checkbox.checked = true;
+            }
+            checkbox.addEventListener('change', function() {
+                updateCheckbox(this, docId);
+            });
+        });
+    });
+</script>
 {% endblock %}
 
 {% block header %}
@@ -15,10 +72,8 @@
     <button onclick="history.back()" class="w-10 h-10 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center ios-shadow">
         <span class="material-icons-round text-slate-700 dark:text-slate-300">chevron_left</span>
     </button>
-    <h1 class="text-xl font-bold tracking-tight">Pre-Departure Guide</h1>
-    <button class="w-10 h-10 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center ios-shadow text-primary">
-        <span class="material-icons-round">volume_up</span>
-    </button>
+    <h1 class="text-xl font-bold tracking-tight">Necessary Steps Guide</h1>
+    <div class="w-10"></div>
 </header>
 {% endblock %}
 
@@ -28,70 +83,248 @@
     <div class="flex justify-between items-end mb-3">
         <div>
             <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Your Progress</p>
-            <h2 class="text-lg font-bold">{{ completed_count }} of {{ total_count }} Steps Completed</h2>
+            <h2 class="text-lg font-bold progress-count">{{ completed_count }} of 10 Steps Completed</h2>
         </div>
-        <span class="text-primary font-bold text-xl">{{ progress_pct }}%</span>
+        <span class="text-primary font-bold text-xl progress-pct">{{ progress_pct }}%</span>
     </div>
     <div class="w-full bg-slate-200 dark:bg-zinc-700 h-2.5 rounded-full overflow-hidden">
         <div class="progress-gradient h-full rounded-full" style="width: {{ progress_pct }}%"></div>
     </div>
 </div>
 
-<!-- Audio Guide -->
-<div class="mt-4 bg-primary/10 dark:bg-primary/20 p-4 rounded-2xl flex items-center gap-4">
-    <div class="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center">
-        <span class="material-icons-round">play_arrow</span>
-    </div>
-    <div class="flex-1">
-        <p class="text-sm font-semibold">Listen to Audio Guidance</p>
-        <p class="text-xs text-slate-500 dark:text-slate-400">Available in Nepali &amp; English</p>
-    </div>
-</div>
+<!-- Necessary Steps Section -->
+<div class="mt-6 space-y-3 mb-6">
+    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">आवश्यक कागजातहरू (Required Documents)</h3>
 
-<!-- Checklist Items -->
-<div class="mt-6 space-y-4 mb-6">
-    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">Mandatory Steps</h3>
-
-    {% for p in progress_items %}
-    {% if p.is_completed %}
-    <!-- Completed Item -->
-    <form method="post" class="block">
-        {% csrf_token %}
-        <input type="hidden" name="item_id" value="{{ p.item.pk }}" />
-        <button type="submit" class="w-full bg-white dark:bg-zinc-900 p-5 rounded-[28px] ios-shadow flex items-center gap-4 border border-transparent dark:border-zinc-800 text-left">
+    <!-- 1. Passport -->
+    <div class="bg-white dark:bg-zinc-900 rounded-[28px] ios-shadow border border-white dark:border-zinc-800">
+        <button onclick="toggleDetail(this)" class="w-full p-5 flex items-center gap-4 text-left">
             <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
-                <span class="material-icons-round text-3xl">{% if p.item.category == 'document' %}description{% elif p.item.category == 'training' %}school{% elif p.item.category == 'legal' %}gavel{% elif p.item.category == 'health' %}health_and_safety{% else %}check_circle{% endif %}</span>
+                <span class="material-icons-round text-3xl">description</span>
             </div>
             <div class="flex-1">
-                <h4 class="font-bold">{{ p.item.title }}</h4>
-                <p class="text-xs text-slate-500 dark:text-slate-400">{{ p.item.description }}</p>
+                <h4 class="font-bold">राहदानी (Passport)</h4>
             </div>
-            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                <span class="material-icons-round text-white text-xl">check</span>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" class="w-5 h-5 rounded border-slate-300 cursor-pointer">
+                <span class="material-icons-round expand-icon text-slate-400 transition-transform">expand_more</span>
             </div>
         </button>
-    </form>
-    {% else %}
-    <!-- Pending Item -->
-    <form method="post" class="block">
-        {% csrf_token %}
-        <input type="hidden" name="item_id" value="{{ p.item.pk }}" />
-        <button type="submit" class="w-full bg-white/60 dark:bg-zinc-900/40 p-5 rounded-[28px] ios-shadow flex items-center gap-4 border border-white dark:border-zinc-800 opacity-80 text-left">
-            <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-400">
-                <span class="material-icons-round text-3xl">{% if p.item.category == 'document' %}description{% elif p.item.category == 'training' %}school{% elif p.item.category == 'legal' %}gavel{% elif p.item.category == 'health' %}health_and_safety{% else %}radio_button_unchecked{% endif %}</span>
-            </div>
-            <div class="flex-1">
-                <h4 class="font-bold text-slate-600 dark:text-slate-400">{{ p.item.title }}</h4>
-                <p class="text-xs text-slate-400 dark:text-slate-500">{{ p.item.description }}</p>
-            </div>
-            <div class="w-8 h-8 rounded-full border-2 border-slate-200 dark:border-zinc-700"></div>
-        </button>
-    </form>
-    {% endif %}
-    {% empty %}
-    <div class="text-center py-4">
-        <p class="text-sm text-slate-400">No checklist items yet. Check back soon!</p>
+        <div class="detail-content border-t border-slate-200 dark:border-zinc-700">
+            <p class="px-5 py-4 text-sm text-slate-600 dark:text-slate-300">
+                विदेश जानका लागि कम्तीमा ६ महिनासम्म म्याद भएको राहदानी अनिवार्य हुन्छ। राहदानीमा स्पष्ट फोटो र व्यक्तिगत विवरण मिलेको हुनुपर्छ।
+            </p>
+        </div>
     </div>
-    {% endfor %}
+
+    <!-- 2. Job Offer Letter -->
+    <div class="bg-white dark:bg-zinc-900 rounded-[28px] ios-shadow border border-white dark:border-zinc-800">
+        <button onclick="toggleDetail(this)" class="w-full p-5 flex items-center gap-4 text-left">
+            <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
+                <span class="material-icons-round text-3xl">mail_outline</span>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-bold">रोजगार प्रस्ताव पत्र (Job Offer Letter)</h4>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" class="w-5 h-5 rounded border-slate-300 cursor-pointer">
+                <span class="material-icons-round expand-icon text-slate-400 transition-transform">expand_more</span>
+            </div>
+        </button>
+        <div class="detail-content border-t border-slate-200 dark:border-zinc-700">
+            <p class="px-5 py-4 text-sm text-slate-600 dark:text-slate-300">
+                विदेशी रोजगारदाताबाट प्राप्त आधिकारिक पत्र हो जसमा कामको पद, तलब, काम गर्ने स्थान र अन्य सर्तहरू उल्लेख गरिएको हुन्छ।
+            </p>
+        </div>
+    </div>
+
+    <!-- 3. Employment Contract -->
+    <div class="bg-white dark:bg-zinc-900 rounded-[28px] ios-shadow border border-white dark:border-zinc-800">
+        <button onclick="toggleDetail(this)" class="w-full p-5 flex items-center gap-4 text-left">
+            <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
+                <span class="material-icons-round text-3xl">handshake</span>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-bold">रोजगार सम्झौता (Employment Contract)</h4>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" class="w-5 h-5 rounded border-slate-300 cursor-pointer">
+                <span class="material-icons-round expand-icon text-slate-400 transition-transform">expand_more</span>
+            </div>
+        </button>
+        <div class="detail-content border-t border-slate-200 dark:border-zinc-700">
+            <p class="px-5 py-4 text-sm text-slate-600 dark:text-slate-300">
+                कामदार र रोजगारदाताबीच भएको कानुनी सम्झौता हो। यसमा कामको अवधि, तलब, सुविधा, काम गर्ने समय लगायतका विवरणहरू हुन्छन्।
+            </p>
+        </div>
+    </div>
+
+    <!-- 4. Passport Size Photo -->
+    <div class="bg-white dark:bg-zinc-900 rounded-[28px] ios-shadow border border-white dark:border-zinc-800">
+        <button onclick="toggleDetail(this)" class="w-full p-5 flex items-center gap-4 text-left">
+            <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
+                <span class="material-icons-round text-3xl">photo_camera</span>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-bold">पासपोर्ट साइज फोटो</h4>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" class="w-5 h-5 rounded border-slate-300 cursor-pointer">
+                <span class="material-icons-round expand-icon text-slate-400 transition-transform">expand_more</span>
+            </div>
+        </button>
+        <div class="detail-content border-t border-slate-200 dark:border-zinc-700">
+            <p class="px-5 py-4 text-sm text-slate-600 dark:text-slate-300">
+                हालै खिचिएको फोटो आवश्यक पर्छ। फोटो प्रायः सेतो पृष्ठभूमिमा र दूतावासको मापदण्ड अनुसार हुनुपर्छ।
+            </p>
+        </div>
+    </div>
+
+    <!-- 5. Medical Report -->
+    <div class="bg-white dark:bg-zinc-900 rounded-[28px] ios-shadow border border-white dark:border-zinc-800">
+        <button onclick="toggleDetail(this)" class="w-full p-5 flex items-center gap-4 text-left">
+            <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
+                <span class="material-icons-round text-3xl">health_and_safety</span>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-bold">मेडिकल परीक्षण रिपोर्ट (Medical Report)</h4>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" class="w-5 h-5 rounded border-slate-300 cursor-pointer">
+                <span class="material-icons-round expand-icon text-slate-400 transition-transform">expand_more</span>
+            </div>
+        </button>
+        <div class="detail-content border-t border-slate-200 dark:border-zinc-700">
+            <p class="px-5 py-4 text-sm text-slate-600 dark:text-slate-300">
+                मान्यताप्राप्त मेडिकल सेन्टरबाट गरिएको स्वास्थ्य परीक्षणको रिपोर्ट हो। संक्रामक रोग नभएको प्रमाणित हुनुपर्छ।
+            </p>
+        </div>
+    </div>
+
+    <!-- 6. Police Clearance Certificate -->
+    <div class="bg-white dark:bg-zinc-900 rounded-[28px] ios-shadow border border-white dark:border-zinc-800">
+        <button onclick="toggleDetail(this)" class="w-full p-5 flex items-center gap-4 text-left">
+            <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
+                <span class="material-icons-round text-3xl">gavel</span>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-bold">प्रहरी चारित्रिक प्रमाणपत्र (Police Clearance Certificate)</h4>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" class="w-5 h-5 rounded border-slate-300 cursor-pointer">
+                <span class="material-icons-round expand-icon text-slate-400 transition-transform">expand_more</span>
+            </div>
+        </button>
+        <div class="detail-content border-t border-slate-200 dark:border-zinc-700">
+            <p class="px-5 py-4 text-sm text-slate-600 dark:text-slate-300">
+                नेपाल प्रहरीबाट जारी गरिने प्रमाणपत्र हो जसले व्यक्तिको आपराधिक रेकर्ड नभएको प्रमाणित गर्छ।
+            </p>
+        </div>
+    </div>
+
+    <!-- 7. Educational Certificates -->
+    <div class="bg-white dark:bg-zinc-900 rounded-[28px] ios-shadow border border-white dark:border-zinc-800">
+        <button onclick="toggleDetail(this)" class="w-full p-5 flex items-center gap-4 text-left">
+            <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
+                <span class="material-icons-round text-3xl">school</span>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-bold">शैक्षिक प्रमाणपत्र (Educational Certificates)</h4>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" class="w-5 h-5 rounded border-slate-300 cursor-pointer">
+                <span class="material-icons-round expand-icon text-slate-400 transition-transform">expand_more</span>
+            </div>
+        </button>
+        <div class="detail-content border-t border-slate-200 dark:border-zinc-700">
+            <p class="px-5 py-4 text-sm text-slate-600 dark:text-slate-300">
+                आवश्यक परेमा शैक्षिक योग्यता प्रमाणित गर्ने प्रमाणपत्रहरू (जस्तै SEE, +2, Diploma आदि) पेश गर्नुपर्छ।
+            </p>
+        </div>
+    </div>
+
+    <!-- 8. Skill/Training Certificate -->
+    <div class="bg-white dark:bg-zinc-900 rounded-[28px] ios-shadow border border-white dark:border-zinc-800">
+        <button onclick="toggleDetail(this)" class="w-full p-5 flex items-center gap-4 text-left">
+            <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
+                <span class="material-icons-round text-3xl">card_membership</span>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-bold">सीप वा तालिम प्रमाणपत्र (Skill/Training Certificate)</h4>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" class="w-5 h-5 rounded border-slate-300 cursor-pointer">
+                <span class="material-icons-round expand-icon text-slate-400 transition-transform">expand_more</span>
+            </div>
+        </button>
+        <div class="detail-content border-t border-slate-200 dark:border-zinc-700">
+            <p class="px-5 py-4 text-sm text-slate-600 dark:text-slate-300">
+                विशेष सीप सम्बन्धी कामका लागि तालिम वा अनुभव प्रमाणित गर्ने कागजात आवश्यक पर्न सक्छ।
+            </p>
+        </div>
+    </div>
+
+    <!-- 9. Visa Application Form -->
+    <div class="bg-white dark:bg-zinc-900 rounded-[28px] ios-shadow border border-white dark:border-zinc-800">
+        <button onclick="toggleDetail(this)" class="w-full p-5 flex items-center gap-4 text-left">
+            <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
+                <span class="material-icons-round text-3xl">receipt</span>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-bold">भिसा आवेदन फाराम (Visa Application Form)</h4>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" class="w-5 h-5 rounded border-slate-300 cursor-pointer">
+                <span class="material-icons-round expand-icon text-slate-400 transition-transform">expand_more</span>
+            </div>
+        </button>
+        <div class="detail-content border-t border-slate-200 dark:border-zinc-700">
+            <p class="px-5 py-4 text-sm text-slate-600 dark:text-slate-300">
+                सम्बन्धित देशको दूतावास वा रोजगारदातामार्फत भर्ने आधिकारिक फाराम हो।
+            </p>
+        </div>
+    </div>
+
+    <!-- 10. Labour Approval -->
+    <div class="bg-white dark:bg-zinc-900 rounded-[28px] ios-shadow border border-white dark:border-zinc-800">
+        <button onclick="toggleDetail(this)" class="w-full p-5 flex items-center gap-4 text-left">
+            <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
+                <span class="material-icons-round text-3xl">verified</span>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-bold">श्रम स्वीकृति (Labour Approval)</h4>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" class="w-5 h-5 rounded border-slate-300 cursor-pointer">
+                <span class="material-icons-round expand-icon text-slate-400 transition-transform">expand_more</span>
+            </div>
+        </button>
+        <div class="detail-content border-t border-slate-200 dark:border-zinc-700">
+            <p class="px-5 py-4 text-sm text-slate-600 dark:text-slate-300">
+                नेपाल सरकारको वैदेशिक रोजगार विभागबाट प्राप्त स्वीकृति हो, जुन वैदेशिक रोजगारीका लागि अनिवार्य हुन्छ।
+            </p>
+        </div>
+    </div>
+
+    <!-- 11. Health Insurance -->
+    <div class="bg-white dark:bg-zinc-900 rounded-[28px] ios-shadow border border-white dark:border-zinc-800">
+        <button onclick="toggleDetail(this)" class="w-full p-5 flex items-center gap-4 text-left">
+            <div class="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
+                <span class="material-icons-round text-3xl">medical_services</span>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-bold">स्वास्थ्य बीमा (Health Insurance)</h4>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" class="w-5 h-5 rounded border-slate-300 cursor-pointer">
+                <span class="material-icons-round expand-icon text-slate-400 transition-transform">expand_more</span>
+            </div>
+        </button>
+        <div class="detail-content border-t border-slate-200 dark:border-zinc-700">
+            <p class="px-5 py-4 text-sm text-slate-600 dark:text-slate-300">
+                केही देशहरूमा अनिवार्य स्वास्थ्य बीमा कागजात आवश्यक हुन्छ, जसले विदेश बसाइँ अवधिमा स्वास्थ्य उपचार कभर गर्छ।
+            </p>
+        </div>
+    </div>
 </div>
 {% endblock %}
