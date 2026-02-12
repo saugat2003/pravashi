@@ -150,17 +150,26 @@ def worker_profile_settings(request):
         elif action == 'toggle_location_sharing':
             user.location_sharing = not user.location_sharing
             user.save(update_fields=['location_sharing'])
-            return JsonResponse({'location_sharing': user.location_sharing})
+            # If the request is AJAX return JSON, otherwise redirect back
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'location_sharing': user.location_sharing})
+            return redirect('main:worker_profile_settings')
 
         elif action == 'toggle_dark_mode':
             user.dark_mode = not user.dark_mode
             user.save(update_fields=['dark_mode'])
-            return JsonResponse({'dark_mode': user.dark_mode})
+            # If the request is AJAX return JSON, otherwise redirect back
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'dark_mode': user.dark_mode})
+            return redirect('main:worker_profile_settings')
 
         elif action == 'toggle_checkin_reminders':
             user.checkin_reminders = not user.checkin_reminders
             user.save(update_fields=['checkin_reminders'])
-            return JsonResponse({'checkin_reminders': user.checkin_reminders})
+            # If the request is AJAX return JSON, otherwise redirect back
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'checkin_reminders': user.checkin_reminders})
+            return redirect('main:worker_profile_settings')
 
         elif action == 'change_language':
             lang = request.POST.get('language', 'en')
@@ -180,7 +189,34 @@ def worker_profile_settings(request):
         'contract': contract,
         'unread_count': _unread_count(user),
         'emergency_contacts': user.emergency_contacts.all(),
+        # Country-level emergency contacts (police, fire, ambulance, embassy)
+        # Default to Dubai emergency numbers (hardcoded per request)
+        'country_contacts': {
+            'police': '999',
+            'fire': '997',
+            'ambulance': '998',
+            'embassy': None,
+        },
     }
+    # Try to populate country-level emergency numbers from Embassy model and a small lookup
+    if user.current_country:
+        # prefer embassy contact info when available
+        embassy = Embassy.objects.filter(country__icontains=user.current_country).first()
+        if embassy:
+            context['country_contacts']['embassy'] = embassy.emergency_hotline or embassy.phone
+
+        # Simple fallback mapping for common countries (extend as needed)
+        fallback = {
+            'nepal': {'police': '100', 'fire': '101', 'ambulance': '102'},
+            'qatar': {'police': '999', 'fire': '999', 'ambulance': '999'},
+            'india': {'police': '100', 'fire': '101', 'ambulance': '102'},
+            'uae': {'police': '999', 'fire': '998', 'ambulance': '998'},
+        }
+        key = user.current_country.strip().lower()
+        for country_key, numbers in fallback.items():
+            if country_key in key:
+                context['country_contacts'].update(numbers)
+                break
     return render(request, 'main/worker_profile_settings.html', context)
 
 
