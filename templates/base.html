@@ -107,7 +107,7 @@
         </main>
 
         {% block bottom_nav %}
-        <!-- Bottom Navigation: Home | Support | Education | Profile -->
+        <!-- Bottom Navigation: Home | Support | SOS | Pre-Departure | Profile -->
         <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] glass-nav border-t border-slate-100 dark:border-slate-800 px-6 pt-3 pb-5 safe-bottom z-50">
             <div class="flex items-center justify-between">
                 <a href="{% url 'main:home' %}" class="flex flex-col items-center gap-1 {% block nav_home_class %}text-slate-400 dark:text-slate-500 hover:text-primary{% endblock %} transition-colors">
@@ -117,6 +117,12 @@
                 <a href="{% url 'main:embassy_contact_directory' %}" class="flex flex-col items-center gap-1 {% block nav_support_class %}text-slate-400 dark:text-slate-500 hover:text-primary{% endblock %} transition-colors">
                     <span class="material-icons-round text-[22px]">support_agent</span>
                     <span class="text-[10px] font-bold">Support</span>
+                </a>
+                <a href="{% url 'main:emergency_sos_activation' %}" class="flex flex-col items-center gap-1 {% block nav_sos_class %}text-danger{% endblock %} transition-colors -mt-2">
+                    <div class="w-14 h-14 bg-danger rounded-full flex items-center justify-center shadow-lg shadow-danger/30">
+                        <span class="material-icons-round text-white text-[28px]">sos</span>
+                    </div>
+                    <span class="text-[10px] font-bold">SOS</span>
                 </a>
                 <a href="{% url 'main:migration_checklist_education' %}" class="flex flex-col items-center gap-1 {% block nav_education_class %}text-slate-400 dark:text-slate-500 hover:text-primary{% endblock %} transition-colors">
                     <span class="material-icons-round text-[22px]">menu_book</span>
