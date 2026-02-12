@@ -113,9 +113,8 @@ def home(request):
 
     # Today's check-in status
     today = timezone.now().date()
-    checked_in_today = user.safety_checkins.filter(
-        checked_in_at__date=today
-    ).exists()
+    last_checkin = user.safety_checkins.order_by('-checked_in_at').first()
+    checked_in_today = last_checkin and last_checkin.checked_in_at.date() == today
 
     context = {
         'user': user,
@@ -126,6 +125,7 @@ def home(request):
         'total_doc_types': total_doc_types,
         'latest_analysis': latest_analysis,
         'checked_in_today': checked_in_today,
+        'last_checkin': last_checkin,
     }
     return render(request, 'main/home.html', context)
 
