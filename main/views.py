@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse, Http404, HttpResponseForbidden
+from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Q
 from datetime import timedelta
@@ -228,6 +229,71 @@ def secure_document_vault(request):
         'unread_count': _unread_count(user),
     }
     return render(request, 'main/secure_document_vault.html', context)
+
+
+# Download a stored document (owner-only)
+@login_required(login_url='main:login')
+def document_download(request, pk):
+    doc = get_object_or_404(Document, pk=pk)
+    if doc.user != request.user:
+        return HttpResponseForbidden()
+    try:
+        f = doc.file.open('rb')
+        filename = doc.file.name.split('/')[-1]
+        return FileResponse(f, as_attachment=True, filename=filename)
+    except Exception:
+        raise Http404('File not found')
+
+
+# Remove a stored document (owner-only, POST only)
+@login_required(login_url='main:login')
+def document_delete(request, pk):
+    doc = get_object_or_404(Document, pk=pk, user=request.user)
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+    # remove file from storage then delete record
+    try:
+        doc.file.delete(save=False)
+    except Exception:
+        pass
+    doc.delete()
+    messages.success(request, 'Document removed.')
+    _log_activity(request.user, 'document', f'{doc.get_doc_type_display()} deleted')
+    return redirect('main:secure_document_vault')
+
+
+@login_required(login_url='main:login')
+def document_upload_ajax(request):
+    """Accepts a multipart/form-data POST and returns JSON for dynamic UI updates."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+
+    form = DocumentUploadForm(request.POST, request.FILES)
+    if not form.is_valid():
+        return JsonResponse({'ok': False, 'errors': form.errors}, status=400)
+
+    doc = form.save(commit=False)
+    doc.user = request.user
+    doc.save()
+
+    _log_activity(request.user, 'document', f'{doc.get_doc_type_display()} uploaded')
+    Notification.objects.create(
+        user=request.user, category='document',
+        title='Document Uploaded',
+        description=f'Your {doc.get_doc_type_display()} was securely stored.',
+    )
+
+    data = {
+        'id': doc.pk,
+        'doc_type': doc.doc_type,
+        'doc_label': doc.get_doc_type_display(),
+        'uploaded_at': doc.uploaded_at.strftime('%d %b %Y'),
+        'verification_status': doc.verification_status,
+        'download_url': reverse('main:document_download', args=[doc.pk]),
+        'delete_url': reverse('main:document_delete', args=[doc.pk]),
+    }
+
+    return JsonResponse({'ok': True, 'doc': data})
 
 
 # ─── Contract Analysis ───────────────────────
