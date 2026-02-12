@@ -189,7 +189,33 @@ def worker_profile_settings(request):
         'contract': contract,
         'unread_count': _unread_count(user),
         'emergency_contacts': user.emergency_contacts.all(),
+        # Country-level emergency contacts (police, fire, ambulance, embassy)
+        'country_contacts': {
+            'police': None,
+            'fire': None,
+            'ambulance': None,
+            'embassy': None,
+        },
     }
+    # Try to populate country-level emergency numbers from Embassy model and a small lookup
+    if user.current_country:
+        # prefer embassy contact info when available
+        embassy = Embassy.objects.filter(country__icontains=user.current_country).first()
+        if embassy:
+            context['country_contacts']['embassy'] = embassy.emergency_hotline or embassy.phone
+
+        # Simple fallback mapping for common countries (extend as needed)
+        fallback = {
+            'nepal': {'police': '100', 'fire': '101', 'ambulance': '102'},
+            'qatar': {'police': '999', 'fire': '999', 'ambulance': '999'},
+            'india': {'police': '100', 'fire': '101', 'ambulance': '102'},
+            'uae': {'police': '999', 'fire': '998', 'ambulance': '998'},
+        }
+        key = user.current_country.strip().lower()
+        for country_key, numbers in fallback.items():
+            if country_key in key:
+                context['country_contacts'].update(numbers)
+                break
     return render(request, 'main/worker_profile_settings.html', context)
 
 

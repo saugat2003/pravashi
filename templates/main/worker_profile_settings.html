@@ -101,7 +101,7 @@
                 <span class="material-icons-round text-primary text-lg">location_on</span>
                 <span class="text-sm font-medium">Location Sharing</span>
             </div>
-            <form method="post" class="inline">
+                <form method="post" class="inline">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="toggle_location_sharing"/>
                 <button type="submit" class="w-11 h-6 {{ user.location_sharing|yesno:'bg-primary,bg-slate-200' }} rounded-full relative cursor-pointer">
@@ -109,6 +109,27 @@
                 </button>
             </form>
         </div>
+            <div class="px-4 pb-3">
+                <h4 class="text-xs text-slate-400 font-bold">Quick emergency numbers</h4>
+                <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
+                    <a href="tel:{{ country_contacts.police }}" class="rounded-md p-2 bg-white dark:bg-zinc-800 border border-slate-100 dark:border-zinc-800 flex items-center justify-between">
+                        <span>Police</span>
+                        <span class="text-xs text-slate-500">{{ country_contacts.police|default:'N/A' }}</span>
+                    </a>
+                    <a href="tel:{{ country_contacts.fire }}" class="rounded-md p-2 bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 flex items-center justify-between">
+                        <span>Fire Brigade</span>
+                        <span class="text-xs text-slate-500">{{ country_contacts.fire|default:'N/A' }}</span>
+                    </a>
+                    <a href="tel:{{ country_contacts.ambulance }}" class="rounded-md p-2 bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 flex items-center justify-between">
+                        <span>Ambulance / SOS</span>
+                        <span class="text-xs text-slate-500">{{ country_contacts.ambulance|default:'N/A' }}</span>
+                    </a>
+                    <a href="tel:{{ country_contacts.embassy }}" class="rounded-md p-2 bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 flex items-center justify-between">
+                        <span>Embassy / Emergency</span>
+                        <span class="text-xs text-slate-500">{{ country_contacts.embassy|default:'N/A' }}</span>
+                    </a>
+                </div>
+            </div>
         <a href="{% url 'main:daily_safety_check_in' %}" class="flex items-center justify-between px-4 py-3.5">
             <div class="flex items-center gap-3">
                 <span class="material-icons-round text-primary text-lg">schedule</span>
