@@ -190,10 +190,11 @@ def worker_profile_settings(request):
         'unread_count': _unread_count(user),
         'emergency_contacts': user.emergency_contacts.all(),
         # Country-level emergency contacts (police, fire, ambulance, embassy)
+        # Default to Dubai emergency numbers (hardcoded per request)
         'country_contacts': {
-            'police': None,
-            'fire': None,
-            'ambulance': None,
+            'police': '999',
+            'fire': '997',
+            'ambulance': '998',
             'embassy': None,
         },
     }
