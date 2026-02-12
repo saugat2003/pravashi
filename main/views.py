@@ -371,13 +371,9 @@ def daily_safety_check_in(request):
         checked = user.safety_checkins.filter(checked_in_at__date=day).exists()
         week_days.append({'date': day, 'day': day.day, 'label': day.strftime('%a'), 'checked_in': checked, 'is_today': day == today})
 
-    # Today's status
-    already_checked_in = user.safety_checkins.filter(checked_in_at__date=today).exists()
-
     context = {
         'checkins': checkins,
         'week_days': week_days,
-        'already_checked_in': already_checked_in,
         'unread_count': _unread_count(user),
     }
     return render(request, 'main/daily_safety_check_in.html', context)
@@ -421,6 +417,8 @@ def emergency_sos_activation(request):
     context = {
         'user': user,
         'unread_count': _unread_count(user),
+        'user_lat': user.latitude if user.latitude else 27.7172,
+        'user_lon': user.longitude if user.longitude else 85.3240,
     }
     return render(request, 'main/emergency_sos_activation.html', context)
 
@@ -448,11 +446,17 @@ def family_safety_dashboard(request):
     activity_logs = worker.activity_logs.all()[:10] if worker else []
     is_safe = last_checkin.status == 'safe' if last_checkin else True
 
+    # Get worker's location for map
+    worker_lat = worker.latitude if worker and worker.latitude else 25.2854  # Default to Doha, Qatar
+    worker_lon = worker.longitude if worker and worker.longitude else 51.5310
+
     context = {
         'worker': worker,
         'last_checkin': last_checkin,
         'activity_logs': activity_logs,
         'is_safe': is_safe,
+        'worker_lat': worker_lat,
+        'worker_lon': worker_lon,
         'unread_count': _unread_count(user),
     }
     return render(request, 'main/family_safety_dashboard.html', context)
@@ -465,8 +469,11 @@ def embassy_contact_directory(request):
     user = request.user
     query = request.GET.get('q', '')
 
+    # Filter embassies by current country (unless searching)
     embassies = Embassy.objects.all()
-    if query:
+    if user.current_country and not query:
+        embassies = embassies.filter(country__icontains=user.current_country)
+    elif query:
         embassies = embassies.filter(
             Q(country__icontains=query) | Q(city__icontains=query) | Q(name__icontains=query)
         )
@@ -490,6 +497,44 @@ def embassy_contact_directory(request):
         country__icontains=user.current_country
     ).first() if user.current_country else None
 
+    # Get user's current location for map centering
+    user_lat = user.latitude if user.latitude else 27.7172  # Default to Kathmandu
+    user_lon = user.longitude if user.longitude else 85.3240
+
+    # Prepare embassy markers for map (only current country)
+    embassy_markers = []
+    for embassy in embassies:
+        if embassy.latitude and embassy.longitude:
+            embassy_markers.append({
+                'name': embassy.name,
+                'lat': embassy.latitude,
+                'lon': embassy.longitude,
+                'city': embassy.city,
+                'country': embassy.country,
+                'phone': embassy.phone,
+                'address': embassy.address,
+            })
+
+    # Get nearby communities for the map (current country only)
+    communities = Community.objects.all()
+    if user.current_country:
+        communities = communities.filter(country__icontains=user.current_country)
+    
+    community_markers = []
+    for community in communities[:20]:  # Limit to 20 for performance
+        if community.latitude and community.longitude:
+            community_markers.append({
+                'name': community.name,
+                'lat': community.latitude,
+                'lon': community.longitude,
+                'city': community.city,
+                'phone': community.phone,
+                'type': community.community_type,
+            })
+
+    # Police/helpline markers (placeholder - no Police model exists yet)
+    police_markers = []
+
     context = {
         'embassies': embassies,
         'bookmarked_ids': bookmarked_ids,
@@ -497,6 +542,12 @@ def embassy_contact_directory(request):
         'query': query,
         'user': user,
         'unread_count': _unread_count(user),
+        'user_lat': user_lat,
+        'user_lon': user_lon,
+        'embassy_markers': json.dumps(embassy_markers),
+        'community_markers': json.dumps(community_markers),
+        'police_markers': json.dumps(police_markers),
+        'communities': communities[:10],  # Pass first 10 for list display
     }
     return render(request, 'main/embassy_contact_directory.html', context)
 
@@ -512,10 +563,31 @@ def community_locator(request):
             Q(name__icontains=query) | Q(city__icontains=query) | Q(country__icontains=query) | Q(address__icontains=query)
         )
 
+    # Get user's current location for map centering
+    user = request.user
+    user_lat = user.latitude if user.latitude else 27.7172  # Default to Kathmandu
+    user_lon = user.longitude if user.longitude else 85.3240
+
+    # Prepare community markers data
+    community_markers = []
+    for community in communities:
+        if community.latitude and community.longitude:
+            community_markers.append({
+                'name': community.name,
+                'lat': community.latitude,
+                'lon': community.longitude,
+                'city': community.city,
+                'phone': community.phone,
+                'type': community.community_type,
+            })
+
     context = {
         'communities': communities,
         'query': query,
         'unread_count': _unread_count(request.user),
+        'user_lat': user_lat,
+        'user_lon': user_lon,
+        'community_markers': json.dumps(community_markers),
     }
     return render(request, 'main/community_locator.html', context)
 

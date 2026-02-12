@@ -31,15 +31,8 @@
         <div class="w-16 h-16 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
             <span class="text-3xl">👋</span>
         </div>
-        {% if already_checked_in %}
-        <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">You're checked in today!</h2>
-        <p class="text-slate-600 dark:text-slate-400 mb-4">Great job, {{ user.first_name|default:user.username }}. Stay safe!</p>
-        <div class="inline-flex items-center gap-2 bg-primary/20 text-primary font-bold py-3 px-6 rounded-2xl">
-            <span class="material-icons-round">check_circle</span> Checked In
-        </div>
-        {% else %}
-        <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Good Morning, {{ user.first_name|default:user.username }}!</h2>
-        <p class="text-slate-600 dark:text-slate-400 mb-8">Are you safe and okay today?</p>
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">How are you, {{ user.first_name|default:user.username }}?</h2>
+        <p class="text-slate-600 dark:text-slate-400 mb-8">Check in to let your family know you're safe</p>
         <div class="space-y-4">
             <form method="post">
                 {% csrf_token %}
@@ -52,7 +45,6 @@
                 <span class="material-icons-round text-[20px]">emergency</span> I Need Help
             </a>
         </div>
-        {% endif %}
     </div>
 </div>
 

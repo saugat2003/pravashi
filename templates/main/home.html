@@ -34,30 +34,30 @@
 
     <!-- Safety Status Card -->
     <div class="mt-4 p-3.5 rounded-2xl flex items-center gap-3
-        {% if checked_in_today %}
+        {% if last_checkin %}
             bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800
         {% else %}
             bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800
         {% endif %}">
         <div class="w-10 h-10 rounded-full flex items-center justify-center
-            {% if checked_in_today %}bg-emerald-500{% else %}bg-red-500{% endif %}">
+            {% if last_checkin %}bg-emerald-500{% else %}bg-red-500{% endif %}">
             <span class="material-icons-round text-white text-lg">
-                {% if checked_in_today %}verified_user{% else %}warning{% endif %}
+                {% if last_checkin %}verified_user{% else %}warning{% endif %}
             </span>
         </div>
         <div class="flex-1">
-            <p class="text-[13px] font-bold {% if checked_in_today %}text-emerald-700 dark:text-emerald-400{% else %}text-red-700 dark:text-red-400{% endif %}">
-                {% if checked_in_today %}
+            <p class="text-[13px] font-bold {% if last_checkin %}text-emerald-700 dark:text-emerald-400{% else %}text-red-700 dark:text-red-400{% endif %}">
+                {% if last_checkin %}
                     🟢 Status: Safe
                 {% else %}
-                    🔴 Check-in Pending
+                    🔴 No Check-ins Yet
                 {% endif %}
             </p>
             <p class="text-[11px] opacity-60">
                 {% if last_checkin %}
-                    Last check-in: {{ last_checkin.checked_in_at|date:"M d, g:i A" }}
+                    Last: {{ last_checkin.checked_in_at|date:"M d, Y - g:i A" }}
                 {% else %}
-                    No check-ins yet
+                    Tap below to check in
                 {% endif %}
             </p>
         </div>
@@ -81,20 +81,10 @@
 
 <!-- ─── Daily Check-In Button ─── -->
 <div class="mt-3 px-1">
-    {% if checked_in_today %}
-    <div class="w-full py-4 bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-700 rounded-2xl flex items-center justify-center gap-2">
-        <span class="material-icons-round text-emerald-500 text-xl">favorite</span>
-        <span class="text-emerald-700 dark:text-emerald-400 font-bold text-sm">You're checked in today ✓</span>
-    </div>
-    {% else %}
     <a href="{% url 'main:daily_safety_check_in' %}"
-       class="block w-full py-4 bg-emerald-500 rounded-2xl text-center shadow-md shadow-emerald-200/50 dark:shadow-emerald-900/30 active:scale-[0.97] transition-transform">
-        <div class="flex items-center justify-center gap-2">
-            <span class="material-icons-round text-white text-xl">favorite</span>
-            <span class="text-white font-bold text-sm">🟢 I Am Safe — Daily Check-In</span>
-        </div>
+       class="block w-full py-4 bg-[#10B981] hover:bg-[#059669] rounded-2xl text-center shadow-md shadow-emerald-200/50 dark:shadow-emerald-900/30 active:scale-[0.97] transition-all">
+        <span class="text-white font-bold text-base">Check In Now</span>
     </a>
-    {% endif %}
 </div>
 
 <!-- ─── Main Action Buttons (4 Core Features) ─── -->
