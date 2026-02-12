@@ -150,17 +150,26 @@ def worker_profile_settings(request):
         elif action == 'toggle_location_sharing':
             user.location_sharing = not user.location_sharing
             user.save(update_fields=['location_sharing'])
-            return JsonResponse({'location_sharing': user.location_sharing})
+            # If the request is AJAX return JSON, otherwise redirect back
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'location_sharing': user.location_sharing})
+            return redirect('main:worker_profile_settings')
 
         elif action == 'toggle_dark_mode':
             user.dark_mode = not user.dark_mode
             user.save(update_fields=['dark_mode'])
-            return JsonResponse({'dark_mode': user.dark_mode})
+            # If the request is AJAX return JSON, otherwise redirect back
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'dark_mode': user.dark_mode})
+            return redirect('main:worker_profile_settings')
 
         elif action == 'toggle_checkin_reminders':
             user.checkin_reminders = not user.checkin_reminders
             user.save(update_fields=['checkin_reminders'])
-            return JsonResponse({'checkin_reminders': user.checkin_reminders})
+            # If the request is AJAX return JSON, otherwise redirect back
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'checkin_reminders': user.checkin_reminders})
+            return redirect('main:worker_profile_settings')
 
         elif action == 'change_language':
             lang = request.POST.get('language', 'en')
