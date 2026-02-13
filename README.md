@@ -1,9 +1,9 @@
-# Pravasi: The Bridge for Migrants
+# Pravash: The Bridge for Migrants
 **Empowering and protecting Nepali migrant workers with a comprehensive digital safety net.**
 
 > **Status:** Hackathon Prototype (MVP)  
 > **Team:** The Debuggers
-> **Project Name:** Pravasi
+> **Project Name:** Pravash
 
 ---
 
@@ -21,7 +21,7 @@
 ---
 
 ## 🔎 Overview
-**Pravasi** is a mobile-first web application designed to act as a digital guardian for migrant workers. It addresses critical challenges such as contract exploitation, lack of emergency support, and family anxiety by providing a unified platform for **document security**, **risk analysis**, and **real-time safety monitoring**.
+**Pravash** is a mobile-first web application designed to act as a digital guardian for migrant workers. It addresses critical challenges such as contract exploitation, lack of emergency support, and family anxiety by providing a unified platform for **document security**, **risk analysis**, and **real-time safety monitoring**.
 
 ---
 
@@ -98,8 +98,8 @@ Thousands of Nepali workers migrate daily, facing:
 
 1.  **Clone the Repository**
     ```bash
-    git clone https://github.com/the_debuggers/pravasi.git
-    cd pravasi
+    git clone https://github.com/the_debuggers/pravash.git
+    cd pravash
     ```
 
 2.  **Create Virtual Environment**
@@ -150,7 +150,7 @@ Thousands of Nepali workers migrate daily, facing:
 ## 📂 Project Structure
 
 ```text
-pravasi/
+pravash/
 ├── core/                   # Project configuration
 │   ├── settings.py         # Django settings (Auth, Installed Apps)
 │   └── urls.py             # Root URL routing

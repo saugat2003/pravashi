@@ -1,6 +1,6 @@
-# Pravasi Documentation
+# Pravash Documentation
 
-This directory contains detailed documentation for the Pravasi project.
+This directory contains detailed documentation for the Pravash project.
 
 ## User Guides
 *   (Coming Soon) User Manual for Workers
