@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Profile & Settings - Pradesh Setu{% endblock %}
+{% block title %}Profile & Settings - Pravash{% endblock %}
 
 {% block nav_profile_class %}text-primary font-bold{% endblock %}
 
@@ -21,9 +21,18 @@
         <div class="w-24 h-24 rounded-full bg-cover bg-center border-4 border-primary/20" style='background-image: url("{{ user.photo.url }}")'></div>
         {% else %}
         <div class="w-24 h-24 rounded-full bg-primary/10 border-4 border-primary/20 flex items-center justify-center">
-            <span class="material-symbols-outlined text-primary text-4xl">person</span>
+            <span class="text-primary text-2xl font-bold">{{ user.first_name|make_list|first|default:'U' }}{{ user.last_name|make_list|first|default:'' }}</span>
         </div>
         {% endif %}
+        <!-- Photo upload button -->
+        <form method="post" enctype="multipart/form-data" id="photoForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_photo">
+            <label for="photoInput" class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary flex items-center justify-center ring-3 ring-white dark:ring-zinc-900 cursor-pointer hover:bg-primary/90 transition-colors">
+                <span class="material-icons-round text-white text-sm">photo_camera</span>
+            </label>
+            <input type="file" id="photoInput" name="photo" accept="image/*" class="hidden" onchange="document.getElementById('photoForm').submit()">
+        </form>
         {% if user.is_verified %}
         <div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-success flex items-center justify-center ring-3 ring-white dark:ring-zinc-900">
             <span class="material-icons-round text-white text-sm">check</span>
@@ -34,7 +43,7 @@
     {% if user.worker_id %}<p class="text-xs text-slate-400 mt-0.5">Worker ID: #{{ user.worker_id }}</p>{% endif %}
     <div class="flex items-center gap-1.5 mt-2 text-xs text-slate-500">
         <span class="material-icons-round text-sm">location_on</span>
-        {{ user.current_city|default:'Location not set' }}{% if user.current_country %}, {{ user.current_country }}{% endif %}
+        {{ display_country }}
     </div>
     <div class="flex gap-2 mt-4">
         {% if user.is_verified %}<span class="bg-primary/10 text-primary text-[10px] font-bold px-3 py-1 rounded-full">Verified Worker</span>{% endif %}
@@ -46,43 +55,21 @@
 <section class="mt-5">
     <div class="flex items-center justify-between mb-3">
         <h3 class="font-bold text-sm">My Documents</h3>
-        <a href="{% url 'main:secure_document_vault' %}" class="text-xs text-primary font-semibold">View Vault →</a>
     </div>
-    <div class="grid grid-cols-3 gap-3">
-        <div class="bg-white dark:bg-zinc-900 p-3 rounded-2xl ios-shadow border border-slate-100 dark:border-zinc-800 flex flex-col items-center gap-2">
-            <div class="w-10 h-10 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined text-xl">badge</span>
+    <a href="{% url 'main:secure_document_vault' %}" class="block bg-white dark:bg-zinc-900 rounded-2xl ios-shadow border border-slate-100 dark:border-zinc-800 p-4 active:scale-[0.98] transition-transform">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+                    <span class="material-icons-round text-primary text-xl">folder_special</span>
+                </div>
+                <div>
+                    <p class="text-sm font-bold">Secure Document Vault</p>
+                    <p class="text-[11px] text-slate-400">Passport, Visa, Contract & more</p>
+                </div>
             </div>
-            <span class="text-[10px] font-semibold">Passport</span>
-            {% if passport %}
-            <span class="material-icons-round text-success text-xs">check_circle</span>
-            {% else %}
-            <span class="material-icons-round text-slate-300 text-xs">radio_button_unchecked</span>
-            {% endif %}
+            <span class="material-icons-round text-slate-300 dark:text-zinc-600">chevron_right</span>
         </div>
-        <div class="bg-white dark:bg-zinc-900 p-3 rounded-2xl ios-shadow border border-slate-100 dark:border-zinc-800 flex flex-col items-center gap-2">
-            <div class="w-10 h-10 rounded-xl bg-info/10 dark:bg-info/20 flex items-center justify-center text-info">
-                <span class="material-symbols-outlined text-xl">flight</span>
-            </div>
-            <span class="text-[10px] font-semibold">Visa</span>
-            {% if visa %}
-            <span class="material-icons-round text-success text-xs">check_circle</span>
-            {% else %}
-            <span class="material-icons-round text-slate-300 text-xs">radio_button_unchecked</span>
-            {% endif %}
-        </div>
-        <div class="bg-white dark:bg-zinc-900 p-3 rounded-2xl ios-shadow border border-slate-100 dark:border-zinc-800 flex flex-col items-center gap-2">
-            <div class="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center text-warning">
-                <span class="material-symbols-outlined text-xl">description</span>
-            </div>
-            <span class="text-[10px] font-semibold">Contract</span>
-            {% if contract %}
-            <span class="material-icons-round text-success text-xs">check_circle</span>
-            {% else %}
-            <span class="material-icons-round text-slate-300 text-xs">radio_button_unchecked</span>
-            {% endif %}
-        </div>
-    </div>
+    </a>
 </section>
 
 <!-- Safety & Privacy -->
@@ -190,12 +177,122 @@
     </div>
 </section>
 
+<!-- Family Members -->
+<section class="mt-5">
+    <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-sm">Family Members</h3>
+        <button id="addFamilyBtn" class="text-xs text-primary font-semibold flex items-center gap-0.5">
+            <span class="material-icons-round text-sm">person_add</span> Add
+        </button>
+    </div>
+
+    <!-- Add Family Form (hidden by default) -->
+    <form id="addFamilyForm" method="post" action="{% url 'main:manage_family' %}" class="hidden mb-3 bg-white dark:bg-zinc-900 rounded-2xl ios-shadow border border-slate-100 dark:border-zinc-800 p-4">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_family">
+        <div class="space-y-3">
+            <div>
+                <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Name</label>
+                <input type="text" name="name" required placeholder="Full name" class="w-full mt-1 px-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 focus:ring-2 focus:ring-primary/30 outline-none">
+            </div>
+            <div>
+                <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Phone Number</label>
+                <input type="tel" name="phone" required placeholder="+60-1234567890" class="w-full mt-1 px-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 focus:ring-2 focus:ring-primary/30 outline-none">
+            </div>
+            <div>
+                <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Relationship</label>
+                <select name="relationship" class="w-full mt-1 px-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 focus:ring-2 focus:ring-primary/30 outline-none">
+                    <option value="Spouse">Spouse</option>
+                    <option value="Parent">Parent</option>
+                    <option value="Sibling">Sibling</option>
+                    <option value="Child">Child</option>
+                    <option value="Relative">Relative</option>
+                    <option value="Friend">Friend</option>
+                </select>
+            </div>
+            <div class="flex gap-2">
+                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-bold active:scale-95 transition-transform">Add Member</button>
+                <button type="button" id="cancelAddFamily" class="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-300 text-sm font-medium active:scale-95 transition-transform">Cancel</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Family List -->
+    <div class="bg-white dark:bg-zinc-900 rounded-2xl ios-shadow border border-slate-100 dark:border-zinc-800 divide-y divide-slate-100 dark:divide-zinc-800">
+        {% for member in family_members %}
+        <div class="flex items-center justify-between px-4 py-3.5">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    {% if member.relationship == 'Spouse' %}
+                    <span class="material-icons-round text-primary text-lg">favorite</span>
+                    {% elif member.relationship == 'Parent' %}
+                    <span class="material-icons-round text-primary text-lg">elderly</span>
+                    {% elif member.relationship == 'Child' %}
+                    <span class="material-icons-round text-primary text-lg">child_care</span>
+                    {% elif member.relationship == 'Sibling' %}
+                    <span class="material-icons-round text-primary text-lg">people</span>
+                    {% else %}
+                    <span class="material-icons-round text-primary text-lg">person</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <p class="text-sm font-semibold">{{ member.name }}</p>
+                    <p class="text-[11px] text-slate-400">{{ member.relationship }} · {{ member.phone }}</p>
+                </div>
+            </div>
+            <button data-member-id="{{ member.id }}" class="remove-family-btn w-8 h-8 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center transition-colors">
+                <span class="material-icons-round text-slate-300 hover:text-danger text-lg">close</span>
+            </button>
+        </div>
+        {% empty %}
+        <div class="px-4 py-6 text-center">
+            <span class="material-icons-round text-slate-300 text-3xl">group_add</span>
+            <p class="text-xs text-slate-400 mt-2">No family members added yet</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
 <!-- Sign Out -->
 <section class="mt-5 mb-6">
     <a href="{% url 'main:logout' %}" class="w-full py-4 rounded-2xl border-2 border-danger/20 text-danger font-bold text-sm flex items-center justify-center gap-2 hover:bg-danger/5 transition-all active:scale-95">
         <span class="material-icons-round">logout</span>
         Sign Out
     </a>
-    <p class="text-center text-[10px] text-slate-400 mt-3">Pradesh Setu v1.0.0 · Made for Nepali Workers</p>
+    <p class="text-center text-[10px] text-slate-400 mt-3">Pravash v1.0.0 · Made for Nepali Workers</p>
 </section>
+
+<script>
+(function(){
+    // Add Family Member
+    var addBtn = document.getElementById('addFamilyBtn');
+    var form = document.getElementById('addFamilyForm');
+    var cancelBtn = document.getElementById('cancelAddFamily');
+    if(addBtn && form){
+        addBtn.addEventListener('click', function(){ form.classList.toggle('hidden'); });
+        if(cancelBtn) cancelBtn.addEventListener('click', function(){ form.classList.add('hidden'); });
+    }
+
+    // Remove Family Member
+    document.querySelectorAll('.remove-family-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            if(!confirm('Remove this family member?')) return;
+            var memberId = btn.dataset.memberId;
+            fetch('{% url "main:manage_family" %}', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'action=remove_family&member_id=' + memberId
+            })
+            .then(function(r){ return r.json(); })
+            .then(function(data){
+                if(data.success) location.reload();
+            });
+        });
+    });
+})();
+</script>
 {% endblock %}

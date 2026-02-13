@@ -4,9 +4,58 @@
 
 {% block extra_head %}
 <style>
-    .status-dot-safe {
-        background-color: #7CB342;
-        box-shadow: 0 0 10px rgba(124, 179, 66, 0.4);
+    /* ── Glow pulse animation for the main check-in button ── */
+    @keyframes glowPulse {
+        0%, 100% { box-shadow: 0 0 20px rgba(124, 179, 66, 0.4), 0 0 60px rgba(124, 179, 66, 0.15); }
+        50% { box-shadow: 0 0 35px rgba(124, 179, 66, 0.6), 0 0 80px rgba(124, 179, 66, 0.25); }
+    }
+    @keyframes glowPulseRed {
+        0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4), 0 0 60px rgba(239, 68, 68, 0.15); }
+        50% { box-shadow: 0 0 35px rgba(239, 68, 68, 0.6), 0 0 80px rgba(239, 68, 68, 0.25); }
+    }
+    @keyframes ripple {
+        0% { transform: scale(0.8); opacity: 0.6; }
+        100% { transform: scale(2.5); opacity: 0; }
+    }
+    @keyframes checkBounce {
+        0% { transform: scale(0); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .glow-safe {
+        animation: glowPulse 2.5s ease-in-out infinite;
+    }
+    .glow-help {
+        animation: glowPulseRed 2.5s ease-in-out infinite;
+    }
+    .btn-safe:hover { animation: glowPulse 1.2s ease-in-out infinite; }
+    .btn-help:hover { animation: glowPulseRed 1.2s ease-in-out infinite; }
+
+    .ripple-ring {
+        position: absolute;
+        border-radius: 9999px;
+        border: 2px solid rgba(124, 179, 66, 0.3);
+        animation: ripple 2.5s ease-out infinite;
+    }
+
+    .checked-bounce {
+        animation: checkBounce 0.5s ease-out forwards;
+    }
+    .fade-in-up {
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    /* Calendar dot styles */
+    .cal-dot {
+        transition: all 0.3s ease;
+    }
+    .cal-dot:hover {
+        transform: scale(1.15);
     }
 </style>
 {% endblock %}
@@ -17,70 +66,132 @@
         <span class="material-icons-round text-slate-600 dark:text-slate-300">chevron_left</span>
     </button>
     <h1 class="text-lg font-bold">Safety Check</h1>
-    <a href="{% url 'main:safety_notifications' %}" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center">
+    <a href="{% url 'main:safety_notifications' %}" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center relative">
         <span class="material-icons-round text-slate-600 dark:text-slate-300">notifications_none</span>
+        {% if unread_count %}
+        <div class="absolute top-0 right-0 w-2.5 h-2.5 bg-danger border-2 border-white dark:border-zinc-900 rounded-full"></div>
+        {% endif %}
     </a>
 </header>
 {% endblock %}
 
 {% block content %}
-<!-- Check-in Card -->
-<div class="mt-4 p-8 rounded-[32px] bg-[#E8F5E9] dark:bg-emerald-950/30 text-center relative overflow-hidden">
-    <div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full"></div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- CHECK-IN CARD — Always actionable, shows last status   -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="mt-4 p-8 rounded-[32px] bg-gradient-to-br {% if checked_in_today %}from-emerald-50 to-green-100 dark:from-emerald-950/40 dark:to-green-950/30 border border-emerald-200/50 dark:border-emerald-800/30{% else %}from-slate-50 to-emerald-50/50 dark:from-zinc-900/50 dark:to-emerald-950/20 border border-slate-200/50 dark:border-zinc-700/50{% endif %} text-center relative overflow-hidden">
+    <!-- Decorative background circles -->
+    <div class="absolute -top-8 -right-8 w-28 h-28 {% if checked_in_today %}bg-emerald-200/30 dark:bg-emerald-500/10{% else %}bg-primary/5 dark:bg-primary/10{% endif %} rounded-full"></div>
+    <div class="absolute -bottom-4 -left-4 w-20 h-20 {% if checked_in_today %}bg-emerald-200/20 dark:bg-emerald-500/10{% else %}bg-emerald-100/30 dark:bg-emerald-500/5{% endif %} rounded-full"></div>
+
     <div class="relative z-10">
-        <div class="w-16 h-16 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+        {% if checked_in_today %}
+        <!-- Last check-in confirmation (compact) -->
+        <div class="w-14 h-14 mx-auto mb-3 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-300/30 dark:shadow-emerald-900/30 checked-bounce">
+            <span class="material-icons-round text-white text-3xl">check_circle</span>
+        </div>
+        <p class="text-sm font-bold text-emerald-700 dark:text-emerald-400 mb-1 fade-in-up">You're marked safe</p>
+        <p class="text-xs text-emerald-600/70 dark:text-emerald-400/60 mb-5 fade-in-up" style="animation-delay:0.1s;">Tap again anytime to update your status</p>
+        {% else %}
+        <div class="w-16 h-16 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100 dark:border-zinc-700">
             <span class="text-3xl">👋</span>
         </div>
-        <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">How are you, {{ user.first_name|default:user.username }}?</h2>
-        <p class="text-slate-600 dark:text-slate-400 mb-8">Check in to let your family know you're safe</p>
+        <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white mb-1">Hey, {{ user.first_name|default:user.username }}!</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-8">Tap below to let your family know you're safe</p>
+        {% endif %}
+
+        <!-- ── GLOWING "I Am Safe" Button (always visible) ── -->
         <div class="space-y-4">
-            <form method="post">
+            <form method="post" id="checkinForm">
                 {% csrf_token %}
                 <input type="hidden" name="status" value="safe" />
-                <button type="submit" class="w-full bg-primary hover:bg-opacity-90 text-white font-bold py-5 rounded-2xl shadow-lg transition-transform active:scale-[0.98] flex items-center justify-center gap-2">
-                    <span class="material-icons-round">check_circle</span> I Am Safe
-                </button>
+                <div class="relative inline-flex w-full justify-center">
+                    <!-- Ripple rings behind button -->
+                    <div class="ripple-ring absolute inset-0 m-auto w-full h-full" style="animation-delay: 0s;"></div>
+                    <div class="ripple-ring absolute inset-0 m-auto w-full h-full" style="animation-delay: 0.8s;"></div>
+                    <div class="ripple-ring absolute inset-0 m-auto w-full h-full" style="animation-delay: 1.6s;"></div>
+
+                    <button type="submit" id="safeBtn"
+                            class="btn-safe glow-safe relative w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold py-5 rounded-2xl transition-all active:scale-[0.95] flex items-center justify-center gap-3 z-10">
+                        <span class="material-icons-round text-[28px]">check_circle</span>
+                        <span class="text-lg">{% if checked_in_today %}Check In Again{% else %}I Am Safe{% endif %}</span>
+                    </button>
+                </div>
             </form>
-            <a href="{% url 'main:emergency_sos_activation' %}" class="w-full bg-white dark:bg-zinc-800 text-red-500 font-semibold py-4 rounded-2xl border border-red-100 dark:border-red-900/30 shadow-sm transition-transform active:scale-[0.98] flex items-center justify-center gap-2">
+
+            <!-- ── "I Need Help" Button ── -->
+            <a href="{% url 'main:emergency_sos_activation' %}"
+               class="btn-help relative w-full bg-gradient-to-r from-red-500/10 to-rose-500/10 dark:from-red-950/30 dark:to-rose-950/30 text-red-500 font-semibold py-4 rounded-2xl border-2 border-red-200 dark:border-red-900/40 transition-all active:scale-[0.95] flex items-center justify-center gap-2 hover:from-red-500/20 hover:to-rose-500/20 z-10">
                 <span class="material-icons-round text-[20px]">emergency</span> I Need Help
             </a>
         </div>
     </div>
 </div>
 
-<!-- Check-in History -->
-<div class="mt-10">
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- CHECK-IN HISTORY                                        -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="mt-8">
     <div class="flex justify-between items-center mb-4">
-        <h3 class="font-bold text-lg">Check-in History</h3>
-        <button class="text-primary font-medium text-sm">March 2024</button>
+        <h3 class="font-bold text-lg">This Week</h3>
+        <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-zinc-800 px-3 py-1 rounded-full">{{ week_days.0.date|date:"M Y" }}</span>
     </div>
-    <div class="bg-slate-50 dark:bg-zinc-800/50 rounded-[28px] p-5">
-        <div class="grid grid-cols-7 gap-2 text-center">
+
+    <!-- Weekly calendar strip -->
+    <div class="bg-white dark:bg-zinc-800/60 rounded-[24px] p-5 border border-slate-100 dark:border-zinc-700/60 shadow-sm">
+        <div class="grid grid-cols-7 gap-1 text-center">
             {% for day in week_days %}
-            <div class="space-y-2">
-                <span class="text-[10px] font-bold text-slate-400 uppercase {% if day.is_today %}text-primary{% endif %}">{{ day.label }}</span>
-                <div class="w-10 h-10 mx-auto rounded-full {% if day.checked_in %}bg-primary text-white{% elif day.is_today %}bg-primary/20 text-primary border-2 border-primary{% else %}bg-slate-200 dark:bg-zinc-700 text-slate-400 dark:text-zinc-500{% endif %} flex items-center justify-center text-sm font-bold {% if day.is_today and day.checked_in %}border-4 border-white dark:border-zinc-800 shadow-md{% endif %}">{{ day.day }}</div>
+            <div class="flex flex-col items-center gap-1.5">
+                <span class="text-[10px] font-bold uppercase tracking-wider {% if day.is_today %}text-primary{% else %}text-slate-400 dark:text-slate-500{% endif %}">{{ day.label }}</span>
+                <div class="cal-dot relative w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold
+                    {% if day.checked_in and day.is_today %}
+                        bg-primary text-white shadow-lg shadow-primary/30 ring-[3px] ring-primary/20
+                    {% elif day.checked_in %}
+                        bg-primary/90 text-white shadow-md shadow-primary/20
+                    {% elif day.is_today %}
+                        bg-primary/10 text-primary ring-2 ring-primary/40
+                    {% else %}
+                        bg-slate-100 dark:bg-zinc-700/50 text-slate-400 dark:text-zinc-500
+                    {% endif %}">
+                    {% if day.checked_in %}
+                    <span class="material-icons-round text-[18px]">check</span>
+                    {% else %}
+                    {{ day.day }}
+                    {% endif %}
+                </div>
             </div>
             {% endfor %}
         </div>
     </div>
 
     <!-- History Items -->
-    <div class="mt-6 space-y-3 mb-6">
+    <h3 class="font-bold text-lg mt-8 mb-4">Recent Activity</h3>
+    <div class="space-y-3 mb-6">
         {% for c in checkins %}
-        <div class="flex items-center gap-4 p-4 bg-white dark:bg-zinc-800 rounded-2xl border border-slate-100 dark:border-zinc-700">
-            <div class="w-12 h-12 rounded-full {% if c.status == 'safe' %}bg-primary/20{% else %}bg-danger/20{% endif %} flex items-center justify-center">
-                <span class="material-icons-round {% if c.status == 'safe' %}text-primary{% else %}text-danger{% endif %}">{% if c.status == 'safe' %}verified{% else %}warning{% endif %}</span>
+        <div class="flex items-center gap-4 p-4 bg-white dark:bg-zinc-800 rounded-2xl border border-slate-100 dark:border-zinc-700 shadow-sm hover:shadow-md transition-shadow">
+            <div class="w-11 h-11 rounded-xl {% if c.status == 'safe' %}bg-emerald-100 dark:bg-emerald-900/30{% else %}bg-red-100 dark:bg-red-900/30{% endif %} flex items-center justify-center">
+                <span class="material-icons-round text-xl {% if c.status == 'safe' %}text-emerald-600 dark:text-emerald-400{% else %}text-red-500{% endif %}">{% if c.status == 'safe' %}verified_user{% else %}warning{% endif %}</span>
             </div>
-            <div class="flex-1">
-                <p class="font-bold text-sm">{{ c.checked_in_at|date:'F d, Y' }}</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Marked as {{ c.get_status_display }} at {{ c.checked_in_at|time:'h:i A' }}</p>
+            <div class="flex-1 min-w-0">
+                <p class="font-bold text-sm truncate">{{ c.checked_in_at|date:'l, F d' }}</p>
+                <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                    <span class="inline-flex items-center gap-1">
+                        <span class="material-icons-round text-[11px]">schedule</span>
+                        {{ c.checked_in_at|time:'h:i A' }}
+                    </span>
+                </p>
             </div>
-            <span class="text-[10px] px-2 py-1 rounded-full {% if c.status == 'safe' %}bg-primary/10 text-primary{% else %}bg-danger/10 text-danger{% endif %} font-bold">{{ c.get_status_display|upper }}</span>
+            <span class="shrink-0 text-[10px] px-2.5 py-1 rounded-full font-bold tracking-wide
+                {% if c.status == 'safe' %}bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400{% else %}bg-red-100 dark:bg-red-900/30 text-red-500{% endif %}">
+                {{ c.get_status_display|upper }}
+            </span>
         </div>
         {% empty %}
-        <div class="text-center py-4">
-            <p class="text-sm text-slate-400">No check-in history yet.</p>
+        <div class="text-center py-8 bg-white dark:bg-zinc-800 rounded-2xl border border-slate-100 dark:border-zinc-700">
+            <span class="material-icons-round text-slate-300 dark:text-zinc-600 text-4xl">history</span>
+            <p class="text-sm text-slate-400 dark:text-slate-500 mt-2">No check-in history yet.</p>
+            <p class="text-xs text-slate-300 dark:text-slate-600 mt-1">Your safety records will appear here</p>
         </div>
         {% endfor %}
     </div>

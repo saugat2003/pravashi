@@ -64,7 +64,7 @@ def register_view(request):
             Notification.objects.create(
                 user=user,
                 category='general',
-                title='Welcome to Pradesh Setu!',
+                title='Welcome to Pravash!',
                 description='Your account has been created. Start by uploading your documents.',
             )
             return redirect('main:home')
@@ -98,6 +98,12 @@ def onboarding_profile_selection(request):
 def home(request):
     user = request.user
 
+    # Determine display country based on location sharing
+    if user.location_sharing:
+        display_country = user.current_country if user.current_country else 'Malaysia'
+    else:
+        display_country = 'Malaysia'
+
     # Nearest embassy based on user's current country
     nearest_embassy = Embassy.objects.filter(
         country__icontains=user.current_country
@@ -127,8 +133,25 @@ def home(request):
         'latest_analysis': latest_analysis,
         'checked_in_today': checked_in_today,
         'last_checkin': last_checkin,
+        'display_country': display_country,
     }
     return render(request, 'main/home.html', context)
+
+
+@login_required(login_url='main:login')
+def ajax_checkin(request):
+    """AJAX endpoint for quick check-in from home page."""
+    if request.method == 'POST':
+        user = request.user
+        status = request.POST.get('status', 'safe')
+        checkin = SafetyCheckIn.objects.create(user=user, status=status)
+        _log_activity(user, 'check_in', f'Marked as {checkin.get_status_display()}')
+        return JsonResponse({
+            'success': True,
+            'status': checkin.get_status_display(),
+            'time': checkin.checked_in_at.strftime('%b %d, %Y - %I:%M %p'),
+        })
+    return JsonResponse({'success': False}, status=405)
 
 
 # ─── Worker Profile & Settings ───────────────
@@ -171,6 +194,14 @@ def worker_profile_settings(request):
                 return JsonResponse({'checkin_reminders': user.checkin_reminders})
             return redirect('main:worker_profile_settings')
 
+        elif action == 'update_photo':
+            photo = request.FILES.get('photo')
+            if photo:
+                user.photo = photo
+                user.save(update_fields=['photo'])
+                messages.success(request, 'Profile photo updated.')
+            return redirect('main:worker_profile_settings')
+
         elif action == 'change_language':
             lang = request.POST.get('language', 'en')
             user.language_preference = lang
@@ -182,6 +213,12 @@ def worker_profile_settings(request):
     visa = user.documents.filter(doc_type='work_visa').first()
     contract = user.documents.filter(doc_type='employment_contract').first()
 
+    # Determine display country based on location sharing
+    if user.location_sharing:
+        display_country = user.current_country if user.current_country else 'Malaysia'
+    else:
+        display_country = 'Malaysia'
+
     context = {
         'user': user,
         'passport': passport,
@@ -189,6 +226,8 @@ def worker_profile_settings(request):
         'contract': contract,
         'unread_count': _unread_count(user),
         'emergency_contacts': user.emergency_contacts.all(),
+        'family_members': user.emergency_contacts.all(),
+        'display_country': display_country,
         # Country-level emergency contacts (police, fire, ambulance, embassy)
         # Default to Dubai emergency numbers (hardcoded per request)
         'country_contacts': {
@@ -211,6 +250,7 @@ def worker_profile_settings(request):
             'qatar': {'police': '999', 'fire': '999', 'ambulance': '999'},
             'india': {'police': '100', 'fire': '101', 'ambulance': '102'},
             'uae': {'police': '999', 'fire': '998', 'ambulance': '998'},
+            'malaysia': {'police': '999', 'fire': '994', 'ambulance': '999'},
         }
         key = user.current_country.strip().lower()
         for country_key, numbers in fallback.items():
@@ -218,6 +258,37 @@ def worker_profile_settings(request):
                 context['country_contacts'].update(numbers)
                 break
     return render(request, 'main/worker_profile_settings.html', context)
+
+
+@login_required(login_url='main:login')
+def manage_family(request):
+    """Add or remove family members (stored as emergency contacts)."""
+    user = request.user
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'add_family':
+            name = request.POST.get('name', '').strip()
+            phone = request.POST.get('phone', '').strip()
+            relationship = request.POST.get('relationship', 'Relative')
+            if name and phone:
+                EmergencyContact.objects.create(
+                    user=user, name=name, phone=phone, relationship=relationship
+                )
+                _log_activity(user, 'profile', f'Added family member: {name}')
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': True})
+            return redirect('main:worker_profile_settings')
+
+        elif action == 'remove_family':
+            member_id = request.POST.get('member_id')
+            EmergencyContact.objects.filter(user=user, pk=member_id).delete()
+            _log_activity(user, 'profile', 'Removed a family member')
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': True})
+            return redirect('main:worker_profile_settings')
+
+    return redirect('main:worker_profile_settings')
 
 
 # ─── Document Vault ──────────────────────────
@@ -464,8 +535,11 @@ def daily_safety_check_in(request):
     # Recent check-ins
     checkins = user.safety_checkins.all()[:10]
 
-    # 7-day calendar data
+    # Check if already checked in today
     today = timezone.now().date()
+    checked_in_today = user.safety_checkins.filter(checked_in_at__date=today).exists()
+
+    # 7-day calendar data
     week_start = today - timedelta(days=today.weekday())  # Monday
     week_days = []
     for i in range(7):
@@ -476,6 +550,7 @@ def daily_safety_check_in(request):
     context = {
         'checkins': checkins,
         'week_days': week_days,
+        'checked_in_today': checked_in_today,
         'unread_count': _unread_count(user),
     }
     return render(request, 'main/daily_safety_check_in.html', context)
@@ -516,11 +591,23 @@ def emergency_sos_activation(request):
             )
         return JsonResponse({'status': 'active', 'sos_id': sos.pk})
 
+    # Use Malaysia (Kuala Lumpur) as default location when location sharing is off
+    if user.location_sharing:
+        user_lat = user.latitude if user.latitude else 3.1390  # Kuala Lumpur
+        user_lon = user.longitude if user.longitude else 101.6869
+        display_country = user.current_country if user.current_country else 'Malaysia'
+    else:
+        user_lat = 3.1390  # Kuala Lumpur, Malaysia
+        user_lon = 101.6869
+        display_country = 'Malaysia'
+    
     context = {
         'user': user,
         'unread_count': _unread_count(user),
-        'user_lat': user.latitude if user.latitude else 27.7172,
-        'user_lon': user.longitude if user.longitude else 85.3240,
+        'user_lat': user_lat,
+        'user_lon': user_lon,
+        'location_sharing': user.location_sharing,
+        'display_country': display_country,
     }
     return render(request, 'main/emergency_sos_activation.html', context)
 
@@ -548,18 +635,75 @@ def family_safety_dashboard(request):
     activity_logs = worker.activity_logs.all()[:10] if worker else []
     is_safe = last_checkin.status == 'safe' if last_checkin else True
 
+    # Check for active SOS events
+    active_sos = None
+    if worker:
+        active_sos = worker.sos_events.filter(status__in=['pending', 'active']).first()
+        if active_sos:
+            is_safe = False
+
+    # Calculate check-in streak
+    streak = 0
+    if worker:
+        from datetime import timedelta
+        today = timezone.now().date()
+        day = today
+        while True:
+            if worker.safety_checkins.filter(checked_in_at__date=day).exists():
+                streak += 1
+                day -= timedelta(days=1)
+            else:
+                break
+
+    # Recent check-ins for history (last 7)
+    recent_checkins = worker.safety_checkins.all()[:7] if worker else []
+
+    # Weekly calendar data (last 7 days)
+    week_data = []
+    if worker:
+        from datetime import timedelta
+        today = timezone.now().date()
+        for i in range(6, -1, -1):
+            d = today - timedelta(days=i)
+            checked = worker.safety_checkins.filter(checked_in_at__date=d).exists()
+            week_data.append({
+                'date': d,
+                'day_name': d.strftime('%a'),
+                'day_num': d.day,
+                'checked': checked,
+                'is_today': d == today,
+            })
+
     # Get worker's location for map
-    worker_lat = worker.latitude if worker and worker.latitude else 25.2854  # Default to Doha, Qatar
-    worker_lon = worker.longitude if worker and worker.longitude else 51.5310
+    if worker and worker.location_sharing:
+        worker_lat = worker.latitude if worker.latitude else 3.1390
+        worker_lon = worker.longitude if worker.longitude else 101.6869
+        display_country = worker.current_country if worker.current_country else 'Malaysia'
+    else:
+        worker_lat = 3.1390
+        worker_lon = 101.6869
+        display_country = 'Malaysia'
+
+    # Get nearest embassy for SOS banner
+    nearest_embassy = None
+    if active_sos:
+        nearest_embassy = Embassy.objects.first()
 
     context = {
         'worker': worker,
         'last_checkin': last_checkin,
+        'recent_checkins': recent_checkins,
         'activity_logs': activity_logs,
         'is_safe': is_safe,
+        'streak': streak,
+        'week_data': week_data,
         'worker_lat': worker_lat,
         'worker_lon': worker_lon,
+        'location_sharing': worker.location_sharing if worker else False,
+        'display_country': display_country,
         'unread_count': _unread_count(user),
+        'active_sos': active_sos,
+        'nearest_embassy': nearest_embassy,
     }
     return render(request, 'main/family_safety_dashboard.html', context)
 
@@ -600,8 +744,15 @@ def embassy_contact_directory(request):
     ).first() if user.current_country else None
 
     # Get user's current location for map centering
-    user_lat = user.latitude if user.latitude else 27.7172  # Default to Kathmandu
-    user_lon = user.longitude if user.longitude else 85.3240
+    # Use Malaysia (Kuala Lumpur) as default location when location sharing is off
+    if user.location_sharing:
+        user_lat = user.latitude if user.latitude else 3.1390  # Kuala Lumpur
+        user_lon = user.longitude if user.longitude else 101.6869
+        display_country = user.current_country if user.current_country else 'Malaysia'
+    else:
+        user_lat = 3.1390  # Kuala Lumpur, Malaysia
+        user_lon = 101.6869
+        display_country = 'Malaysia'
 
     # Prepare embassy markers for map (only current country)
     embassy_markers = []
@@ -646,6 +797,8 @@ def embassy_contact_directory(request):
         'unread_count': _unread_count(user),
         'user_lat': user_lat,
         'user_lon': user_lon,
+        'location_sharing': user.location_sharing,
+        'display_country': display_country,
         'embassy_markers': json.dumps(embassy_markers),
         'community_markers': json.dumps(community_markers),
         'police_markers': json.dumps(police_markers),
@@ -667,8 +820,15 @@ def community_locator(request):
 
     # Get user's current location for map centering
     user = request.user
-    user_lat = user.latitude if user.latitude else 27.7172  # Default to Kathmandu
-    user_lon = user.longitude if user.longitude else 85.3240
+    # Use Malaysia (Kuala Lumpur) as default location when location sharing is off
+    if user.location_sharing:
+        user_lat = user.latitude if user.latitude else 3.1390  # Kuala Lumpur
+        user_lon = user.longitude if user.longitude else 101.6869
+        display_country = user.current_country if user.current_country else 'Malaysia'
+    else:
+        user_lat = 3.1390  # Kuala Lumpur, Malaysia
+        user_lon = 101.6869
+        display_country = 'Malaysia'
 
     # Prepare community markers data
     community_markers = []
@@ -689,6 +849,8 @@ def community_locator(request):
         'unread_count': _unread_count(request.user),
         'user_lat': user_lat,
         'user_lon': user_lon,
+        'location_sharing': user.location_sharing,
+        'display_country': display_country,
         'community_markers': json.dumps(community_markers),
     }
     return render(request, 'main/community_locator.html', context)
@@ -699,36 +861,65 @@ def community_locator(request):
 @login_required(login_url='main:login')
 def migration_checklist_education(request):
     user = request.user
-    REQUIRED_DOCUMENTS_COUNT = 10
 
     # Handle AJAX requests for checkbox updates
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        document_id = request.POST.get('document_id')
+        item_id = request.POST.get('item_id')
         is_checked = request.POST.get('is_checked') == 'true'
         
-        # Store in session
-        if 'completed_documents' not in request.session:
-            request.session['completed_documents'] = {}
-        
-        request.session['completed_documents'][document_id] = is_checked
-        request.session.modified = True
-        
-        completed_count = sum(1 for v in request.session.get('completed_documents', {}).values() if v)
-        return JsonResponse({
-            'completed_count': completed_count,
-            'progress_pct': int((completed_count / REQUIRED_DOCUMENTS_COUNT) * 100)
-        })
+        try:
+            item = ChecklistItem.objects.get(id=item_id)
+            progress, created = UserChecklistProgress.objects.get_or_create(
+                user=user,
+                item=item
+            )
+            
+            if is_checked:
+                progress.status = UserChecklistProgress.ItemStatus.COMPLETED
+                progress.completed_at = timezone.now()
+            else:
+                progress.status = UserChecklistProgress.ItemStatus.PENDING
+                progress.completed_at = None
+            
+            progress.save()
+            
+            # Calculate progress
+            total_items = ChecklistItem.objects.count()
+            completed_items = UserChecklistProgress.objects.filter(
+                user=user,
+                status=UserChecklistProgress.ItemStatus.COMPLETED
+            ).count()
+            
+            return JsonResponse({
+                'success': True,
+                'completed_count': completed_items,
+                'total_count': total_items,
+                'progress_pct': int((completed_items / total_items) * 100) if total_items > 0 else 0
+            })
+        except ChecklistItem.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Item not found'}, status=404)
 
-    # Regular page load
-    completed_documents = request.session.get('completed_documents', {})
-    completed_count = sum(1 for v in completed_documents.values() if v)
-    progress_pct = int((completed_count / REQUIRED_DOCUMENTS_COUNT) * 100) if REQUIRED_DOCUMENTS_COUNT > 0 else 0
+    # Regular page load - get all checklist items and user's progress
+    checklist_items = ChecklistItem.objects.all()
+    
+    # Get or create progress for all items
+    for item in checklist_items:
+        UserChecklistProgress.objects.get_or_create(user=user, item=item)
+    
+    # Get user's progress
+    user_progress = UserChecklistProgress.objects.filter(user=user).select_related('item')
+    
+    # Calculate completion
+    total_items = checklist_items.count()
+    completed_items = user_progress.filter(status=UserChecklistProgress.ItemStatus.COMPLETED).count()
+    progress_pct = int((completed_items / total_items) * 100) if total_items > 0 else 0
 
     context = {
-        'completed_count': completed_count,
-        'total_count': REQUIRED_DOCUMENTS_COUNT,
+        'checklist_items': checklist_items,
+        'user_progress': {p.item.id: p for p in user_progress},
+        'completed_count': completed_items,
+        'total_count': total_items,
         'progress_pct': progress_pct,
-        'completed_documents': completed_documents,
         'unread_count': _unread_count(user),
     }
     return render(request, 'main/migration_checklist_education.html', context)

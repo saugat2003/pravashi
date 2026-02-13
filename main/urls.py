@@ -19,6 +19,7 @@ urlpatterns = [
 
     # Profile
     path('profile/', views.worker_profile_settings, name='worker_profile_settings'),
+    path('profile/family/', views.manage_family, name='manage_family'),
 
     # Documents
     path('document-vault/', views.secure_document_vault, name='secure_document_vault'),
@@ -35,6 +36,7 @@ urlpatterns = [
 
     # Safety
     path('daily-check-in/', views.daily_safety_check_in, name='daily_safety_check_in'),
+    path('ajax-checkin/', views.ajax_checkin, name='ajax_checkin'),
     path('emergency-sos/', views.emergency_sos_activation, name='emergency_sos_activation'),
     path('sos-countdown/', views.sos_countdown_timer, name='sos_countdown_timer'),
 
