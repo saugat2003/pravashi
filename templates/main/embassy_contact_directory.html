@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Embassy Contact Directory - Pradesh Setu{% endblock %}
+{% block title %}Embassy Contact Directory - Pravash{% endblock %}
 
 {% block nav_support_class %}text-primary font-bold{% endblock %}
 
@@ -31,7 +31,7 @@
     <!-- Search -->
     <form method="get" class="relative group">
         <span class="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
-        <input name="q" value="{{ request.GET.q|default:'' }}" class="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-800 border-none rounded-2xl shadow-sm ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-slate-400" placeholder="Search in {{ user.current_country|default:'your country' }}..." type="text"/>
+        <input name="q" value="{{ request.GET.q|default:'' }}" class="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-800 border-none rounded-2xl shadow-sm ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-slate-400" placeholder="Search in {{ display_country }}..." type="text"/>
     </form>
 
     <!-- Interactive Map -->
@@ -75,7 +75,7 @@
                 </div>
                 <div>
                     <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wide">Current Location</p>
-                    <h3 class="text-sm font-bold">{{ user.current_country|default:'United Arab Emirates' }}</h3>
+                    <h3 class="text-sm font-bold">{{ display_country }}</h3>
                 </div>
             </div>
             {% if current_country_embassy.emergency_hotline %}
@@ -133,7 +133,7 @@
     {% if current_country_embassy %}
     <section class="space-y-4">
         <div class="flex justify-between items-center">
-            <h3 class="text-lg font-bold">Your Embassy in {{ user.current_country|default:'Country' }}</h3>
+            <h3 class="text-lg font-bold">Your Embassy in {{ display_country }}</h3>
         </div>
 
         <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 space-y-4">
@@ -197,8 +197,9 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
     // Initialize support map
-    const userLat = {{ user_lat|default:27.7172 }};
-    const userLon = {{ user_lon|default:85.3240 }};
+    let userLat = {{ user_lat }};
+    let userLon = {{ user_lon }};
+    const locationSharing = {{ location_sharing|lower }};
     const supportMap = L.map('supportMap').setView([userLat, userLon], 10);
 
     // Add OpenStreetMap tile layer
@@ -214,9 +215,28 @@
         iconSize: [20, 20],
         iconAnchor: [10, 10]
     });
-    const userMarker = L.marker([userLat, userLon], { icon: userIcon })
+    let userMarker = L.marker([userLat, userLon], { icon: userIcon })
         .addTo(supportMap)
-        .bindPopup('<strong>Your Location</strong>');
+        .bindPopup('<strong>Your Location</strong><br>{{ display_country }}');
+
+    // Update with real geolocation if location sharing is enabled
+    if (locationSharing && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            userLat = position.coords.latitude;
+            userLon = position.coords.longitude;
+            
+            // Update map view
+            supportMap.setView([userLat, userLon], 10);
+            
+            // Update user marker
+            supportMap.removeLayer(userMarker);
+            userMarker = L.marker([userLat, userLon], { icon: userIcon })
+                .addTo(supportMap)
+                .bindPopup('<strong>Your Location</strong>');
+        }, function(error) {
+            console.log('Geolocation error:', error.message);
+        });
+    }
 
     // Store marker layers
     const embassyMarkers = [];

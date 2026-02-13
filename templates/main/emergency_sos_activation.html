@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Emergency SOS Activation - Pradesh Setu{% endblock %}
+{% block title %}Emergency SOS Activation - Pravash{% endblock %}
 
 {% block nav_sos_class %}text-danger font-bold{% endblock %}
 
@@ -35,6 +35,7 @@
     }
     #sosMap { width: 100%; height: 100%; min-height: 176px; }
     .leaflet-popup-content-wrapper { border-radius: 8px; }
+    .leaflet-container { z-index: 1 !important; }
     @keyframes ping {
         75%, 100% {
             transform: translate(-50%, -50%) scale(2);
@@ -73,9 +74,38 @@
             <span class="text-lg font-extrabold uppercase tracking-widest px-4 text-center">Hold to Activate SOS</span>
         </button>
     </div>
-    <div class="hidden animate-bounce flex items-center space-x-2 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-full border border-red-200 dark:border-red-800/50" id="statusMessage">
-        <div class="w-2 h-2 bg-danger rounded-full pulse-animation"></div>
-        <p class="text-danger font-semibold text-sm">Sending Location to Embassy &amp; Family...</p>
+    <div class="hidden flex flex-col items-center space-y-3" id="statusMessage">
+        <!-- Phase 1: Sending -->
+        <div class="animate-bounce flex items-center space-x-2 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-full border border-red-200 dark:border-red-800/50" id="sendingPhase">
+            <div class="w-2 h-2 bg-danger rounded-full pulse-animation"></div>
+            <p class="text-danger font-semibold text-sm">Sending Location to Embassy & Family...</p>
+        </div>
+        <!-- Phase 2: Sent confirmation -->
+        <div class="hidden flex flex-col items-center space-y-2" id="sentPhase">
+            <div class="flex items-center space-x-2 bg-emerald-50 dark:bg-emerald-900/20 px-5 py-2.5 rounded-full border border-emerald-200 dark:border-emerald-800/50">
+                <span class="material-icons-round text-emerald-500 text-lg">check_circle</span>
+                <p class="text-emerald-600 dark:text-emerald-400 font-semibold text-sm">Location Sent Successfully</p>
+            </div>
+            <div class="bg-white dark:bg-zinc-800 rounded-2xl p-4 ios-shadow border border-slate-100 dark:border-zinc-700 w-full max-w-xs space-y-2 text-center">
+                <p class="text-xs text-slate-500 dark:text-slate-400">Your live location has been shared with:</p>
+                <div class="flex items-center justify-center gap-4">
+                    <div class="flex flex-col items-center">
+                        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span class="material-icons-round text-primary">account_balance</span>
+                        </div>
+                        <span class="text-[10px] text-slate-500 mt-1 font-medium">Embassy</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+                            <span class="material-icons-round text-danger">family_restroom</span>
+                        </div>
+                        <span class="text-[10px] text-slate-500 mt-1 font-medium">Family</span>
+                    </div>
+                </div>
+                <div class="text-[11px] text-slate-400 mt-2 font-mono" id="sentCoords"></div>
+                <p class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-1">Help is on the way!</p>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -90,18 +120,8 @@
     </div>
     <div class="relative h-44 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
         <div id="sosMap"></div>
-        <div class="absolute bottom-3 left-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-[11px] font-mono shadow-sm z-[1000]">
+        <div class="absolute bottom-3 left-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-[11px] font-mono shadow-sm z-[1]">
             <span id="coordsDisplay">Lat: {{ user_lat|floatformat:4 }}&deg;, Lon: {{ user_lon|floatformat:4 }}&deg;</span>
-        </div>
-    </div>
-    <div class="grid grid-cols-2 gap-3">
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700/50">
-            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Signal Strength</p>
-            <p class="text-sm font-semibold">Excellent (4G)</p>
-        </div>
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700/50">
-            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Battery Level</p>
-            <p class="text-sm font-semibold">84%</p>
         </div>
     </div>
 </div>
@@ -112,8 +132,10 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
     // Initialize SOS location map
-    const sosLat = {{ user_lat|default:27.7172 }};
-    const sosLon = {{ user_lon|default:85.3240 }};
+    let sosLat = {{ user_lat }};
+    let sosLon = {{ user_lon }};
+    const locationSharing = {{ location_sharing|lower }};
+    
     const sosMap = L.map('sosMap', {
         zoomControl: false,
         dragging: false,
@@ -144,17 +166,24 @@
         iconAnchor: [16, 16]
     });
 
-    L.marker([sosLat, sosLon], { icon: pulseIcon }).addTo(sosMap);
+    let currentMarker = L.marker([sosLat, sosLon], { icon: pulseIcon }).addTo(sosMap);
 
-    // Update coordinates if geolocation available
-    if (navigator.geolocation) {
+    // Update coordinates with real location if location sharing is enabled
+    if (locationSharing && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            sosMap.setView([lat, lon], 15);
-            L.marker([lat, lon], { icon: pulseIcon }).addTo(sosMap);
+            sosLat = position.coords.latitude;
+            sosLon = position.coords.longitude;
+            sosMap.setView([sosLat, sosLon], 15);
+            
+            // Remove old marker and add new one
+            sosMap.removeLayer(currentMarker);
+            currentMarker = L.marker([sosLat, sosLon], { icon: pulseIcon }).addTo(sosMap);
+            
             document.getElementById('coordsDisplay').textContent = 
-                `Lat: ${lat.toFixed(4)}°, Lon: ${lon.toFixed(4)}°`;
+                `Lat: ${sosLat.toFixed(4)}°, Lon: ${sosLon.toFixed(4)}°`;
+        }, function(error) {
+            // If geolocation fails, keep default Malaysia location
+            console.log('Geolocation error:', error.message);
         });
     }
 
@@ -185,13 +214,23 @@
         sosButton.classList.add('bg-emerald-600');
         sosButton.classList.remove('bg-danger');
         if (navigator.vibrate) navigator.vibrate([100, 30, 100, 30, 300]);
+
+        // Build body with current live location
+        const body = `trigger=1&latitude=${sosLat}&longitude=${sosLon}`;
+
         // Send SOS to backend
         fetch('{% url "main:emergency_sos_activation" %}', {
             method: 'POST',
             headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'},
-            body: 'trigger=1'
+            body: body
         }).then(r => r.json()).then(d => {
-            if(d.redirect) window.location.href = d.redirect;
+            // Phase 2: Show sent confirmation
+            document.getElementById('sendingPhase').classList.add('hidden');
+            const sentPhase = document.getElementById('sentPhase');
+            sentPhase.classList.remove('hidden');
+            document.getElementById('sentCoords').textContent = `Lat: ${sosLat.toFixed(4)}°, Lon: ${sosLon.toFixed(4)}°`;
+        }).catch(err => {
+            document.getElementById('sendingPhase').innerHTML = '<div class="w-2 h-2 bg-danger rounded-full pulse-animation"></div><p class="text-danger font-semibold text-sm">Failed to send. Retrying...</p>';
         });
     }
 </script>
