@@ -1,24 +1,75 @@
 {% extends 'base.html' %}
 
-{% block title %}Pradesh Setu - Home{% endblock %}
+{% block title %}Pravash - Home{% endblock %}
 
 {% block nav_home_class %}text-primary font-bold{% endblock %}
+
+{% block extra_head %}
+<style>
+    @keyframes glowPulse {
+        0%, 100% { box-shadow: 0 0 16px rgba(16, 185, 129, 0.4), 0 0 48px rgba(16, 185, 129, 0.12); }
+        50% { box-shadow: 0 0 28px rgba(16, 185, 129, 0.6), 0 0 64px rgba(16, 185, 129, 0.2); }
+    }
+    @keyframes rippleOut {
+        0% { transform: scale(0.85); opacity: 0.5; }
+        100% { transform: scale(1.8); opacity: 0; }
+    }
+    @keyframes popIn {
+        0% { transform: scale(0.6) translateY(8px); opacity: 0; }
+        60% { transform: scale(1.05) translateY(-2px); opacity: 1; }
+        100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    @keyframes fadeOut {
+        0% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(-10px); }
+    }
+    .glow-checkin {
+        animation: glowPulse 2.5s ease-in-out infinite;
+    }
+    .ripple-ring {
+        position: absolute; inset: 0; margin: auto;
+        border-radius: 1rem; pointer-events: none;
+        border: 2px solid rgba(16, 185, 129, 0.25);
+        animation: rippleOut 2.5s ease-out infinite;
+    }
+    .checkin-toast {
+        animation: popIn 0.4s ease-out forwards;
+    }
+    .checkin-toast.hide {
+        animation: fadeOut 0.4s ease-in forwards;
+    }
+    @keyframes btnBeep {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.03); }
+    }
+    .beep-btn {
+        animation: btnBeep 2s ease-in-out infinite;
+    }
+    .beep-btn:nth-child(2) { animation-delay: 0.3s; }
+    .beep-btn:nth-child(3) { animation-delay: 0.6s; }
+    .beep-btn:nth-child(4) { animation-delay: 0.9s; }
+</style>
+{% endblock %}
 
 {% block header %}
 <!-- ─── Top Section: User Identity & Safety Status ─── -->
 <header class="px-5 pt-5 pb-2">
     <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
+            {% if user.photo %}
+            <div class="w-11 h-11 rounded-full bg-cover bg-center border-2 border-primary/20" style='background-image: url("{{ user.photo.url }}")'></div>
+            {% else %}
             <div class="w-11 h-11 rounded-full bg-primary/15 flex items-center justify-center">
-                <span class="material-icons-round text-primary text-xl">person</span>
+                <span class="text-primary font-bold text-sm">{{ user.first_name|make_list|first|default:'U' }}{{ user.last_name|make_list|first|default:'' }}</span>
             </div>
+            {% endif %}
             <div>
                 <h1 class="text-lg font-extrabold leading-tight">
                     Namaste, <span class="text-primary">{{ user.first_name|default:user.username }}</span> 👋
                 </h1>
                 <div class="flex items-center gap-1">
                     <span class="material-icons-round text-primary text-xs">location_on</span>
-                    <span class="text-[11px] font-medium opacity-60">{{ user.current_country|default:'Location not set' }}</span>
+                    <span class="text-[11px] font-medium opacity-60">{{ display_country|default:'Location not set' }}</span>
                 </div>
             </div>
         </div>
@@ -33,29 +84,29 @@
     </div>
 
     <!-- Safety Status Card -->
-    <div class="mt-4 p-3.5 rounded-2xl flex items-center gap-3
+    <div id="statusCard" class="mt-4 p-3.5 rounded-2xl flex items-center gap-3
         {% if last_checkin %}
             bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800
         {% else %}
             bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800
         {% endif %}">
-        <div class="w-10 h-10 rounded-full flex items-center justify-center
+        <div id="statusCardIcon" class="w-10 h-10 rounded-full flex items-center justify-center
             {% if last_checkin %}bg-emerald-500{% else %}bg-red-500{% endif %}">
             <span class="material-icons-round text-white text-lg">
                 {% if last_checkin %}verified_user{% else %}warning{% endif %}
             </span>
         </div>
         <div class="flex-1">
-            <p class="text-[13px] font-bold {% if last_checkin %}text-emerald-700 dark:text-emerald-400{% else %}text-red-700 dark:text-red-400{% endif %}">
+            <p id="statusCardText" class="text-[13px] font-bold {% if last_checkin %}text-emerald-700 dark:text-emerald-400{% else %}text-red-700 dark:text-red-400{% endif %}">
                 {% if last_checkin %}
-                    🟢 Status: Safe
+                    Checked in {{ last_checkin.checked_in_at|timesince }} ago
                 {% else %}
                     🔴 No Check-ins Yet
                 {% endif %}
             </p>
-            <p class="text-[11px] opacity-60">
+            <p id="statusCardSub" class="text-[11px] opacity-60">
                 {% if last_checkin %}
-                    Last: {{ last_checkin.checked_in_at|date:"M d, Y - g:i A" }}
+                    {{ last_checkin.checked_in_at|date:"M d, Y - g:i A" }}
                 {% else %}
                     Tap below to check in
                 {% endif %}
@@ -70,9 +121,8 @@
 <!-- ─── SOS Emergency Button ─── -->
 <div class="mt-4 px-1">
     <a href="{% url 'main:emergency_sos_activation' %}"
-       class="block w-full py-5 bg-danger rounded-2xl text-center shadow-lg shadow-red-300/40 dark:shadow-red-900/40 active:scale-[0.97] transition-transform">
+       class="beep-btn block w-full py-5 bg-danger rounded-2xl text-center shadow-lg shadow-red-300/40 dark:shadow-red-900/40 active:scale-[0.97] transition-transform">
         <div class="flex items-center justify-center gap-2">
-            <span class="material-icons-round text-white text-3xl animate-pulse">sos</span>
             <span class="text-white text-xl font-extrabold tracking-wide">SOS EMERGENCY</span>
         </div>
         <p class="text-white/80 text-[11px] font-medium mt-1">Tap for immediate help</p>
@@ -80,12 +130,132 @@
 </div>
 
 <!-- ─── Daily Check-In Button ─── -->
-<div class="mt-3 px-1">
-    <a href="{% url 'main:daily_safety_check_in' %}"
-       class="block w-full py-4 bg-[#10B981] hover:bg-[#059669] rounded-2xl text-center shadow-md shadow-emerald-200/50 dark:shadow-emerald-900/30 active:scale-[0.97] transition-all">
-        <span class="text-white font-bold text-base">Check In Now</span>
-    </a>
+<div class="mt-3 px-1 relative" id="checkinWrapper">
+    <!-- Ripple rings -->
+    <div class="ripple-ring" style="animation-delay:0s;"></div>
+    <div class="ripple-ring" style="animation-delay:0.8s;"></div>
+    <div class="ripple-ring" style="animation-delay:1.6s;"></div>
+
+    <button type="button" id="checkinBtn"
+            class="beep-btn glow-checkin relative z-10 block w-full py-4 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 rounded-2xl text-center shadow-md active:scale-[0.95] transition-all">
+        <span class="flex items-center justify-center gap-2">
+            <span class="material-icons-round text-white text-[22px]" id="checkinIcon">check_circle</span>
+            <span class="text-white font-extrabold text-base drop-shadow-sm" id="checkinLabel">
+                {% if checked_in_today %}Check In Again{% else %}Check In Now{% endif %}
+            </span>
+        </span>
+    </button>
+
+    <!-- View Streak link -->
+    <div class="text-center mt-2">
+        <a href="{% url 'main:daily_safety_check_in' %}" class="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors">
+            <span class="material-icons-round text-[14px]">local_fire_department</span>
+            View Streak
+        </a>
+    </div>
 </div>
+
+<!-- Check-in Toast Popup (hidden) -->
+<div id="checkinToast" class="hidden fixed inset-x-0 top-24 z-50 flex justify-center px-6 pointer-events-none">
+    <div class="checkin-toast pointer-events-auto bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl shadow-emerald-200/40 dark:shadow-black/40 border border-emerald-200 dark:border-emerald-800 px-6 py-4 flex items-center gap-3 max-w-sm w-full">
+        <div class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shrink-0 shadow-md shadow-emerald-300/40">
+            <span class="material-icons-round text-white text-xl">check</span>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="text-sm font-bold text-emerald-700 dark:text-emerald-400">Checked in!</p>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400" id="toastTime">Your family has been notified</p>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const btn = document.getElementById('checkinBtn');
+    const toast = document.getElementById('checkinToast');
+    const toastInner = toast.querySelector('.checkin-toast');
+    const checkinLabel = document.getElementById('checkinLabel');
+    const toastTime = document.getElementById('toastTime');
+    let busy = false;
+
+    btn.addEventListener('click', function() {
+        if (busy) return;
+        busy = true;
+
+        // Visual press feedback
+        btn.classList.add('scale-[0.93]');
+        setTimeout(() => btn.classList.remove('scale-[0.93]'), 150);
+
+        // Get CSRF token from cookie as fallback
+        function getCookie(name) {
+            let val = null;
+            document.cookie.split(';').forEach(c => {
+                c = c.trim();
+                if (c.startsWith(name + '=')) val = decodeURIComponent(c.substring(name.length + 1));
+            });
+            return val;
+        }
+        const csrfToken = '{{ csrf_token }}' || getCookie('csrftoken');
+
+        // Send AJAX check-in
+        fetch("{% url 'main:ajax_checkin' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'status=safe'
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                // Update status card
+                var card = document.getElementById('statusCard');
+                var icon = document.getElementById('statusCardIcon');
+                var text = document.getElementById('statusCardText');
+                var sub  = document.getElementById('statusCardSub');
+
+                if (card) {
+                    card.classList.remove('bg-red-50','dark:bg-red-900/20','border-red-200','dark:border-red-800');
+                    card.classList.add('bg-emerald-50','dark:bg-emerald-900/20','border-emerald-200','dark:border-emerald-800');
+                }
+                if (icon) {
+                    icon.classList.remove('bg-red-500');
+                    icon.classList.add('bg-emerald-500');
+                    var iconSpan = icon.querySelector('.material-icons-round');
+                    if (iconSpan) iconSpan.textContent = 'verified_user';
+                }
+                if (text) {
+                    text.classList.remove('text-red-700','dark:text-red-400');
+                    text.classList.add('text-emerald-700','dark:text-emerald-400');
+                    text.textContent = 'Checked in just now';
+                }
+                if (sub) {
+                    sub.textContent = data.time;
+                }
+
+                // Update button text
+                if (checkinLabel) checkinLabel.textContent = 'Check In Again';
+
+                // Show toast
+                if (toastTime) toastTime.textContent = data.time;
+                toast.classList.remove('hidden');
+                toastInner.classList.remove('hide');
+
+                // Hide toast after 2.5s
+                setTimeout(function() {
+                    toastInner.classList.add('hide');
+                    setTimeout(function() { toast.classList.add('hidden'); }, 400);
+                }, 2500);
+            }
+            busy = false;
+        })
+        .catch(function(err) {
+            console.error('Check-in failed:', err);
+            busy = false;
+        });
+    });
+})();
+</script>
 
 <!-- ─── Main Action Buttons (4 Core Features) ─── -->
 <div class="mt-6 grid grid-cols-2 gap-3">

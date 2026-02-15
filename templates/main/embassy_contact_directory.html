@@ -1,15 +1,25 @@
 {% extends 'base.html' %}
 
-{% block title %}Embassy Contact Directory - Pradesh Setu{% endblock %}
+{% block title %}Embassy Contact Directory - Pravash{% endblock %}
 
 {% block nav_support_class %}text-primary font-bold{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+    #supportMap { width: 100%; height: 100%; min-height: 240px; }
+    .leaflet-popup-content-wrapper { border-radius: 12px; }
+    .leaflet-popup-content { margin: 12px; font-family: 'Plus Jakarta Sans', sans-serif; }
+</style>
+{% endblock %}
 
 {% block header %}
 <header class="px-6 py-4 flex items-center justify-between">
     <button onclick="history.back()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700">
         <span class="material-symbols-rounded">chevron_left</span>
     </button>
-    <h1 class="text-xl font-bold">Embassy Directory</h1>
+    <h1 class="text-xl font-bold">Support & Helpline</h1>
     <button class="w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700">
         <span class="material-symbols-rounded">more_horiz</span>
     </button>
@@ -21,92 +31,323 @@
     <!-- Search -->
     <form method="get" class="relative group">
         <span class="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
-        <input name="q" value="{{ request.GET.q|default:'' }}" class="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-800 border-none rounded-2xl shadow-sm ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-slate-400" placeholder="Search by country or city..." type="text"/>
+        <input name="q" value="{{ request.GET.q|default:'' }}" class="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-800 border-none rounded-2xl shadow-sm ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-slate-400" placeholder="Search in {{ display_country }}..." type="text"/>
     </form>
 
-    <!-- Current Location Card -->
-    <section class="bg-primary p-6 rounded-[2rem] text-white shadow-xl shadow-primary/20 relative overflow-hidden">
-        <div class="relative z-10 flex flex-col gap-4">
-            <div class="flex items-center gap-3">
-                <span class="bg-white/20 p-2 rounded-xl backdrop-blur-md">
-                    <span class="material-symbols-rounded text-white">location_on</span>
-                </span>
-                <div>
-                    <p class="text-xs text-white/70 font-medium uppercase tracking-wider">Current Location</p>
-                    <h2 class="text-lg font-bold">United Arab Emirates</h2>
-                </div>
-            </div>
-            <p class="text-sm text-white/80 leading-relaxed">
-                You are in the UAE. Contact the nearest embassy immediately for emergencies.
-            </p>
-            <button class="w-full py-4 bg-white text-primary font-bold rounded-2xl flex items-center justify-center gap-3 active:scale-95 transition-transform">
-                <span class="material-symbols-rounded">call</span>
-                Emergency Hotline: +971 2 444 7888
+    <!-- Interactive Map -->
+    <div class="relative w-full h-60 rounded-3xl overflow-hidden shadow-sm border border-slate-200/50 dark:border-slate-800/50">
+        <div id="supportMap"></div>
+        <div class="absolute top-4 right-4 flex flex-col gap-2 z-[1000]">
+            <button onclick="recenterSupportMap()" class="w-10 h-10 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center shadow-md active:scale-95 transition-transform">
+                <span class="material-symbols-rounded text-slate-600 dark:text-slate-300">my_location</span>
             </button>
         </div>
-        <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-    </section>
+        <div class="absolute bottom-4 left-4 right-4 z-[999]">
+            <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg">
+                <div class="flex items-center gap-3 text-xs flex-wrap">
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-3 h-3 rounded-full bg-blue-500 border-2 border-white"></div>
+                        <span class="font-medium">You</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-3 h-3 rounded-full bg-red-500 border-2 border-white"></div>
+                        <span class="font-medium">Embassy</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-3 h-3 rounded-full bg-green-500 border-2 border-white"></div>
+                        <span class="font-medium">Community</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-3 h-3 rounded-full bg-orange-500 border-2 border-white"></div>
+                        <span class="font-medium">Police</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Embassy List -->
+    <!-- Current Location Info (Compact) -->
+    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <span class="material-symbols-rounded text-primary text-xl">location_on</span>
+                </div>
+                <div>
+                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wide">Current Location</p>
+                    <h3 class="text-sm font-bold">{{ display_country }}</h3>
+                </div>
+            </div>
+            {% if current_country_embassy.emergency_hotline %}
+            <a href="tel:{{ current_country_embassy.emergency_hotline }}" class="flex items-center gap-2 bg-danger px-4 py-2 rounded-xl text-white text-xs font-bold active:scale-95 transition-transform">
+                <span class="material-symbols-rounded text-[16px]">call</span>
+                Emergency
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filter Toggles -->
+    <div class="flex gap-2 overflow-x-auto hide-scrollbar">
+        <button onclick="filterMap('all')" id="filter-all" class="filter-btn flex-shrink-0 px-5 py-2.5 bg-primary text-white rounded-full text-sm font-bold active:scale-95 transition-all">
+            <span class="material-symbols-rounded text-[16px] align-middle mr-1">public</span> All
+        </button>
+        <button onclick="filterMap('embassy')" id="filter-embassy" class="filter-btn flex-shrink-0 px-5 py-2.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-bold active:scale-95 transition-all">
+            <span class="material-symbols-rounded text-[16px] align-middle mr-1">account_balance</span> Embassy
+        </button>
+        <button onclick="filterMap('community')" id="filter-community" class="filter-btn flex-shrink-0 px-5 py-2.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-bold active:scale-95 transition-all">
+            <span class="material-symbols-rounded text-[16px] align-middle mr-1">groups</span> Communities
+        </button>
+        <button onclick="filterMap('police')" id="filter-police" class="filter-btn flex-shrink-0 px-5 py-2.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-bold active:scale-95 transition-all">
+            <span class="material-symbols-rounded text-[16px] align-middle mr-1">local_police</span> Police
+        </button>
+    </div>
+
+    <!-- Nearby Communities Section -->
+    {% if communities %}
     <section class="space-y-4">
         <div class="flex justify-between items-center">
-            <h3 class="text-lg font-bold">All Embassies</h3>
-            <span class="text-sm text-slate-500 font-medium">{{ embassies|length }} Result{{ embassies|length|pluralize }}</span>
+            <h3 class="text-lg font-bold">Nearby Communities</h3>
+            <a href="{% url 'main:community_locator' %}" class="text-xs font-bold text-primary">View All</a>
+        </div>
+        <div class="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+            {% for community in communities|slice:":5" %}
+            <div class="flex-shrink-0 w-48 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mb-2">
+                    <span class="material-symbols-rounded text-emerald-500 text-xl">groups</span>
+                </div>
+                <h4 class="font-bold text-sm line-clamp-1">{{ community.name }}</h4>
+                <p class="text-xs text-slate-500 mt-1">{{ community.city }}</p>
+                {% if community.phone %}
+                <a href="tel:{{ community.phone }}" class="mt-2 text-xs text-primary font-semibold flex items-center gap-1">
+                    <span class="material-symbols-rounded text-[14px]">call</span> Contact
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Embassy Contact Card -->
+    {% if current_country_embassy %}
+    <section class="space-y-4">
+        <div class="flex justify-between items-center">
+            <h3 class="text-lg font-bold">Your Embassy in {{ display_country }}</h3>
         </div>
 
-        {% for embassy in embassies %}
-        <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 space-y-4 {% if forloop.last %}mb-6{% endif %}">
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 space-y-4">
             <div class="flex justify-between items-start">
                 <div class="flex gap-4">
                     <div class="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center overflow-hidden border border-slate-100 dark:border-slate-700">
                         <span class="text-2xl">🏛️</span>
                     </div>
                     <div>
-                        <h4 class="font-bold">{{ embassy.name }}</h4>
-                        <p class="text-sm text-slate-500">{{ embassy.country }}</p>
+                        <h4 class="font-bold">{{ current_country_embassy.name }}</h4>
+                        <p class="text-sm text-slate-500">{{ current_country_embassy.country }}</p>
                     </div>
                 </div>
                 <form method="post" class="inline">
                     {% csrf_token %}
-                    <input type="hidden" name="embassy_id" value="{{ embassy.pk }}" />
-                    <button type="submit" class="p-2 {% if embassy.pk in bookmarked_ids %}text-primary{% else %}text-slate-400{% endif %} hover:text-primary transition-colors">
-                        <span class="material-symbols-rounded">{% if embassy.pk in bookmarked_ids %}bookmark{% else %}bookmark_border{% endif %}</span>
+                    <input type="hidden" name="embassy_id" value="{{ current_country_embassy.pk }}" />
+                    <button type="submit" class="p-2 {% if current_country_embassy.pk in bookmarked_ids %}text-primary{% else %}text-slate-400{% endif %} hover:text-primary transition-colors">
+                        <span class="material-symbols-rounded">{% if current_country_embassy.pk in bookmarked_ids %}bookmark{% else %}bookmark_border{% endif %}</span>
                     </button>
                 </form>
             </div>
             <div class="grid grid-cols-2 gap-3 py-3 border-y border-slate-50 dark:border-slate-700">
-                {% if embassy.labor_attache %}
+                {% if current_country_embassy.labor_attache %}
                 <div class="space-y-1">
-                    <p class="text-[10px] uppercase tracking-wide text-slate-400 font-bold">Labor Attach&eacute;</p>
-                    <p class="text-sm font-semibold">{{ embassy.labor_attache }}</p>
+                    <p class="text-[10px] uppercase tracking-wide text-slate-400 font-bold">Labor Attaché</p>
+                    <p class="text-sm font-semibold">{{ current_country_embassy.labor_attache }}</p>
                 </div>
                 {% endif %}
-                {% if embassy.office_hours %}
+                {% if current_country_embassy.office_hours %}
                 <div class="space-y-1">
                     <p class="text-[10px] uppercase tracking-wide text-slate-400 font-bold">Office Hours</p>
-                    <p class="text-sm font-semibold">{{ embassy.office_hours }}</p>
+                    <p class="text-sm font-semibold">{{ current_country_embassy.office_hours }}</p>
                 </div>
                 {% endif %}
             </div>
             <div class="flex gap-3">
-                {% if embassy.address %}
-                <a href="https://maps.google.com/?q={{ embassy.address|urlencode }}" target="_blank" class="flex-1 py-3 px-4 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-semibold rounded-xl flex items-center justify-center gap-2 text-sm border border-slate-100 dark:border-slate-700">
+                {% if current_country_embassy.address %}
+                <a href="https://maps.google.com/?q={{ current_country_embassy.address|urlencode }}" target="_blank" class="flex-1 py-3 px-4 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-semibold rounded-xl flex items-center justify-center gap-2 text-sm border border-slate-100 dark:border-slate-700">
                     <span class="material-symbols-rounded text-lg">map</span> Open in Maps
                 </a>
                 {% endif %}
-                {% if embassy.phone %}
-                <a href="tel:{{ embassy.phone }}" class="flex-1 py-3 px-4 bg-primary text-white font-semibold rounded-xl flex items-center justify-center gap-2 text-sm">
+                {% if current_country_embassy.phone %}
+                <a href="tel:{{ current_country_embassy.phone }}" class="flex-1 py-3 px-4 bg-primary text-white font-semibold rounded-xl flex items-center justify-center gap-2 text-sm">
                     <span class="material-symbols-rounded text-lg">call</span> Call Now
                 </a>
                 {% endif %}
             </div>
         </div>
-        {% empty %}
-        <div class="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 text-center mb-6">
-            <span class="material-symbols-rounded text-slate-300 text-4xl">search_off</span>
-            <p class="text-sm text-slate-400 mt-2">No embassies found. Try a different search.</p>
-        </div>
-        {% endfor %}
     </section>
+    {% else %}
+    <div class="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 text-center">
+        <span class="material-symbols-rounded text-slate-300 text-4xl">search_off</span>
+        <p class="text-sm text-slate-400 mt-2">No embassy information available for your current location.</p>
+    </div>
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    // Initialize support map
+    let userLat = {{ user_lat }};
+    let userLon = {{ user_lon }};
+    const locationSharing = {{ location_sharing|lower }};
+    const supportMap = L.map('supportMap').setView([userLat, userLon], 10);
+
+    // Add OpenStreetMap tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19
+    }).addTo(supportMap);
+
+    // User location marker (blue)
+    const userIcon = L.divIcon({
+        className: 'custom-user-marker',
+        html: '<div style="width: 14px; height: 14px; background: #3B82F6; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+    });
+    let userMarker = L.marker([userLat, userLon], { icon: userIcon })
+        .addTo(supportMap)
+        .bindPopup('<strong>Your Location</strong><br>{{ display_country }}');
+
+    // Update with real geolocation if location sharing is enabled
+    if (locationSharing && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            userLat = position.coords.latitude;
+            userLon = position.coords.longitude;
+            
+            // Update map view
+            supportMap.setView([userLat, userLon], 10);
+            
+            // Update user marker
+            supportMap.removeLayer(userMarker);
+            userMarker = L.marker([userLat, userLon], { icon: userIcon })
+                .addTo(supportMap)
+                .bindPopup('<strong>Your Location</strong>');
+        }, function(error) {
+            console.log('Geolocation error:', error.message);
+        });
+    }
+
+    // Store marker layers
+    const embassyMarkers = [];
+    const communityMarkers = [];
+    const policeMarkers = [];
+
+    // Embassy markers (red)
+    const embassies = {{ embassy_markers|safe }};
+    embassies.forEach(function(embassy) {
+        const embassyIcon = L.divIcon({
+            className: 'custom-embassy-marker',
+            html: '<div style="width: 14px; height: 14px; background: #EF4444; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+        
+        const marker = L.marker([embassy.lat, embassy.lon], { icon: embassyIcon }).addTo(supportMap);
+        
+        let popupContent = `<div class="text-sm">
+            <strong class="block mb-1 text-red-600">🏛️ ${embassy.name}</strong>
+            <span class="text-xs text-gray-600">${embassy.city}, ${embassy.country}</span>`;
+        
+        if (embassy.phone) {
+            popupContent += `<br><a href="tel:${embassy.phone}" class="text-xs text-primary font-semibold mt-1 inline-block">📞 ${embassy.phone}</a>`;
+        }
+        
+        popupContent += `</div>`;
+        marker.bindPopup(popupContent);
+        embassyMarkers.push(marker);
+    });
+
+    // Community markers (green)
+    const communities = {{ community_markers|safe }};
+    communities.forEach(function(community) {
+        const communityIcon = L.divIcon({
+            className: 'custom-community-marker',
+            html: '<div style="width: 12px; height: 12px; background: #10B981; border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+        });
+        
+        const marker = L.marker([community.lat, community.lon], { icon: communityIcon }).addTo(supportMap);
+        
+        let popupContent = `<div class="text-sm">
+            <strong class="block mb-1 text-emerald-600">👥 ${community.name}</strong>
+            <span class="text-xs text-gray-600">${community.city}</span>`;
+        
+        if (community.phone) {
+            popupContent += `<br><a href="tel:${community.phone}" class="text-xs text-primary font-semibold mt-1 inline-block">📞 ${community.phone}</a>`;
+        }
+        
+        popupContent += `</div>`;
+        marker.bindPopup(popupContent);
+        communityMarkers.push(marker);
+    });
+
+    // Police markers (placeholder - orange)
+    // Note: Add police data to context if available
+    const policeData = {{ police_markers|default:"[]"|safe }};
+    policeData.forEach(function(police) {
+        const policeIcon = L.divIcon({
+            className: 'custom-police-marker',
+            html: '<div style="width: 14px; height: 14px; background: #F97316; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+        
+        const marker = L.marker([police.lat, police.lon], { icon: policeIcon }).addTo(supportMap);
+        marker.bindPopup(`<div class="text-sm"><strong class="block mb-1 text-orange-600">🚓 ${police.name}</strong></div>`);
+        policeMarkers.push(marker);
+    });
+
+    // Filter function
+    function filterMap(type) {
+        // Update button styles
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('bg-primary', 'text-white');
+            btn.classList.add('bg-white', 'dark:bg-slate-800', 'text-slate-700', 'dark:text-slate-300', 'border', 'border-slate-200', 'dark:border-slate-700');
+        });
+        document.getElementById('filter-' + type).classList.add('bg-primary', 'text-white');
+        document.getElementById('filter-' + type).classList.remove('bg-white', 'dark:bg-slate-800', 'text-slate-700', 'dark:text-slate-300', 'border', 'border-slate-200', 'dark:border-slate-700');
+
+        // Show/hide markers
+        if (type === 'all') {
+            embassyMarkers.forEach(m => supportMap.addLayer(m));
+            communityMarkers.forEach(m => supportMap.addLayer(m));
+            policeMarkers.forEach(m => supportMap.addLayer(m));
+        } else if (type === 'embassy') {
+            embassyMarkers.forEach(m => supportMap.addLayer(m));
+            communityMarkers.forEach(m => supportMap.removeLayer(m));
+            policeMarkers.forEach(m => supportMap.removeLayer(m));
+        } else if (type === 'community') {
+            embassyMarkers.forEach(m => supportMap.removeLayer(m));
+            communityMarkers.forEach(m => supportMap.addLayer(m));
+            policeMarkers.forEach(m => supportMap.removeLayer(m));
+        } else if (type === 'police') {
+            embassyMarkers.forEach(m => supportMap.removeLayer(m));
+            communityMarkers.forEach(m => supportMap.removeLayer(m));
+            policeMarkers.forEach(m => supportMap.addLayer(m));
+        }
+    }
+
+    // Recenter map function
+    function recenterSupportMap() {
+        supportMap.setView([userLat, userLon], 10);
+        userMarker.openPopup();
+    }
+
+    // Fix map rendering
+    setTimeout(function() {
+        supportMap.invalidateSize();
+    }, 100);
+</script>
 {% endblock %}

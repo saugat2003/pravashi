@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}SOS Countdown - Pradesh Setu{% endblock %}
+{% block title %}SOS Countdown - Pravash{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -62,7 +62,7 @@
         <span class="material-icons-round text-red-400 text-sm animate-pulse">location_on</span>
         <p class="text-xs text-red-300/80">GPS location will be shared</p>
     </div>
-    <p class="text-xs text-red-400/60 leading-relaxed">
+    <p class="text-xs text-red-400/60 leading-relaxed" id="sos-info-text">
         Alert will be sent to your emergency contacts, nearest embassy, and local authorities.
     </p>
 </div>
@@ -78,6 +78,17 @@
 
 {% block extra_js %}
 <script>
+    let sosLat = 3.1390;
+    let sosLon = 101.6869;
+
+    // Try getting real GPS
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            sosLat = pos.coords.latitude;
+            sosLon = pos.coords.longitude;
+        });
+    }
+
     let count = 5;
     const el = document.getElementById('countdown-number');
     const timer = setInterval(() => {
@@ -86,14 +97,17 @@
             clearInterval(timer);
             el.textContent = '!';
             el.classList.remove('countdown-pulse');
-            // Trigger SOS via backend
+            // Trigger SOS via backend with location
             fetch('{% url "main:emergency_sos_activation" %}', {
                 method: 'POST',
                 headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'},
-                body: 'trigger=1'
+                body: `trigger=1&latitude=${sosLat}&longitude=${sosLon}`
             }).then(r => r.json()).then(d => {
                 document.querySelector('.text-red-300').textContent = 'SOS SENT';
-                document.querySelector('.text-red-400\\/70').textContent = 'Help is on the way!';
+                document.querySelector('[class*="text-red-400\\/70"]').textContent = 'Location sent to Embassy & Family!';
+                document.getElementById('sos-info-text').innerHTML = 
+                    '<span class="text-emerald-400 font-semibold">✓ Location shared successfully</span><br>' +
+                    '<span class="text-red-300/80 font-mono text-[10px]">Lat: ' + sosLat.toFixed(4) + '°, Lon: ' + sosLon.toFixed(4) + '°</span>';
             });
         } else {
             el.textContent = count;

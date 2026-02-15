@@ -367,6 +367,7 @@ class ChecklistItem(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     category = models.CharField(max_length=50, blank=True, help_text='e.g. documents, health, training, legal, safety, finance')
+    icon = models.CharField(max_length=50, default='description', help_text='Material Icons name')
     order = models.PositiveSmallIntegerField(default=0)
 
     class Meta:

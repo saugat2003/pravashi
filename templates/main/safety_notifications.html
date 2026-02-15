@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Notifications - Pradesh Setu{% endblock %}
+{% block title %}Notifications - Pravash{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -29,7 +29,7 @@
     <div class="flex gap-2 mt-3 overflow-x-auto no-scrollbar">
         <a href="{% url 'main:safety_notifications' %}" class="{% if not request.GET.category %}tab-active{% else %}bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-slate-300{% endif %} px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all">All</a>
         <a href="{% url 'main:safety_notifications' %}?category=safety" class="{% if request.GET.category == 'safety' %}tab-active{% else %}bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-slate-300{% endif %} px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all">Safety</a>
-        <a href="{% url 'main:safety_notifications' %}?category=checkin" class="{% if request.GET.category == 'checkin' %}tab-active{% else %}bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-slate-300{% endif %} px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all">Check‑ins</a>
+        {# Check-ins tab removed per request #}
         <a href="{% url 'main:safety_notifications' %}?category=community" class="{% if request.GET.category == 'community' %}tab-active{% else %}bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-slate-300{% endif %} px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all">Community</a>
     </div>
 </header>
@@ -43,12 +43,12 @@
     <div class="space-y-3">
         {% for n in today_notifications %}
         <div class="{% if not n.is_read %}{% if n.category == 'safety' or n.category == 'sos' %}bg-danger/5 dark:bg-danger/10 border-danger/20{% else %}bg-white dark:bg-zinc-900 border-slate-100 dark:border-zinc-800{% endif %}{% else %}bg-white dark:bg-zinc-900 border-slate-100 dark:border-zinc-800 opacity-70{% endif %} p-4 rounded-2xl border flex items-start gap-3">
-            <div class="w-10 h-10 rounded-xl {% if n.category == 'safety' or n.category == 'sos' %}bg-danger/20 text-danger{% elif n.category == 'checkin' %}bg-primary/10 dark:bg-primary/20 text-primary{% elif n.category == 'community' %}bg-info/10 dark:bg-info/20 text-info{% elif n.category == 'contract' %}bg-success/10 text-success{% elif n.category == 'document' %}bg-warning/10 text-warning{% else %}bg-slate-100 text-slate-500{% endif %} flex items-center justify-center shrink-0">
-                <span class="material-icons-round text-xl">{% if n.category == 'safety' or n.category == 'sos' %}warning{% elif n.category == 'checkin' %}schedule{% elif n.category == 'community' %}groups{% elif n.category == 'contract' %}verified{% elif n.category == 'document' %}folder{% else %}notifications{% endif %}</span>
+            <div class="w-10 h-10 rounded-xl {% if n.category == 'safety' or n.category == 'sos' %}bg-danger/20 text-danger{% elif n.category == 'community' %}bg-info/10 dark:bg-info/20 text-info{% elif n.category == 'contract' %}bg-success/10 text-success{% elif n.category == 'document' %}bg-warning/10 text-warning{% else %}bg-slate-100 text-slate-500{% endif %} flex items-center justify-center shrink-0">
+                <span class="material-icons-round text-xl">{% if n.category == 'safety' or n.category == 'sos' %}warning{% elif n.category == 'community' %}groups{% elif n.category == 'contract' %}verified{% elif n.category == 'document' %}folder{% else %}notifications{% endif %}</span>
             </div>
             <div class="flex-1">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold {% if n.category == 'safety' or n.category == 'sos' %}text-danger{% elif n.category == 'checkin' %}text-primary{% elif n.category == 'community' %}text-info{% elif n.category == 'contract' %}text-success{% elif n.category == 'document' %}text-warning{% else %}text-slate-500{% endif %}">{{ n.get_category_display }}</span>
+                    <span class="text-xs font-bold {% if n.category == 'safety' or n.category == 'sos' %}text-danger{% elif n.category == 'community' %}text-info{% elif n.category == 'contract' %}text-success{% elif n.category == 'document' %}text-warning{% else %}text-slate-500{% endif %}">{{ n.get_category_display }}</span>
                     <span class="text-[10px] text-slate-400">{{ n.created_at|timesince }} ago</span>
                 </div>
                 <p class="text-sm font-semibold mt-1">{{ n.title }}</p>
@@ -74,8 +74,8 @@
     <div class="space-y-3">
         {% for n in earlier_notifications %}
         <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-100 dark:border-zinc-800 flex items-start gap-3 opacity-70">
-            <div class="w-10 h-10 rounded-xl {% if n.category == 'safety' or n.category == 'sos' %}bg-danger/20 text-danger{% elif n.category == 'checkin' %}bg-primary/10 text-primary{% elif n.category == 'community' %}bg-info/10 text-info{% elif n.category == 'contract' %}bg-success/10 text-success{% elif n.category == 'document' %}bg-warning/10 text-warning{% else %}bg-slate-100 text-slate-500{% endif %} flex items-center justify-center shrink-0">
-                <span class="material-icons-round text-xl">{% if n.category == 'safety' or n.category == 'sos' %}warning{% elif n.category == 'checkin' %}schedule{% elif n.category == 'community' %}groups{% elif n.category == 'contract' %}verified{% elif n.category == 'document' %}folder{% else %}notifications{% endif %}</span>
+            <div class="w-10 h-10 rounded-xl {% if n.category == 'safety' or n.category == 'sos' %}bg-danger/20 text-danger{% elif n.category == 'community' %}bg-info/10 text-info{% elif n.category == 'contract' %}bg-success/10 text-success{% elif n.category == 'document' %}bg-warning/10 text-warning{% else %}bg-slate-100 text-slate-500{% endif %} flex items-center justify-center shrink-0">
+                <span class="material-icons-round text-xl">{% if n.category == 'safety' or n.category == 'sos' %}warning{% elif n.category == 'community' %}groups{% elif n.category == 'contract' %}verified{% elif n.category == 'document' %}folder{% else %}notifications{% endif %}</span>
             </div>
             <div class="flex-1">
                 <div class="flex items-center justify-between">
