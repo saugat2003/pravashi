@@ -1,13 +1,13 @@
-# Pravash: The Bridge for Migrants
+# Pravashi: The Bridge for Migrants
 **Empowering and protecting Nepali migrant workers with a comprehensive digital safety net.**
 
 > **Status:** Hackathon Prototype (MVP)  
 > **Team:** The Debuggers
-> **Project Name:** Pravash
+> **Project Name:** Pravashi
 
 ---
 
-## 📖 Table of Contents
+## Table of Contents
 1.  [Overview](#overview)
 2.  [Team](#team)
 3.  [Problem Statement](#problem-statement)
@@ -20,12 +20,12 @@
 
 ---
 
-## 🔎 Overview
-**Pravash** is a mobile-first web application designed to act as a digital guardian for migrant workers. It addresses critical challenges such as contract exploitation, lack of emergency support, and family anxiety by providing a unified platform for **document security**, **risk analysis**, and **real-time safety monitoring**.
+## Overview
+**Pravashi** is a mobile-first web application designed to act as a digital guardian for migrant workers. It addresses critical challenges such as contract exploitation, lack of emergency support, and family anxiety by providing a unified platform for **document security**, **risk analysis**, and **real-time safety monitoring**.
 
 ---
 
-## 👥 Team: The Debuggers
+## Team: The Debuggers
 
 | Name | Role | Handle |
 | :--- | :--- | :--- |
@@ -36,42 +36,42 @@
 
 ---
 
-## 🚩 Problem Statement
+## Problem Statement
 Thousands of Nepali workers migrate daily, facing:
 *   **Contract Substitution:** Signing one contract at home but being forced into another abroad.
 *   **Legal Opacity:** Inability to read legal documents in foreign languages.
 *   **Emergency Vulnerability:** No easy way to alert family or embassies during distress.
 *   **Document Theft:** Passports and visas are often confiscated by employers.
 
-## 💡 Solution & Key Features
+## Solution & Key Features
 
-### 1. 🚨 One-Tap SOS Emergency System
+### 1. One-Tap SOS Emergency System
 *   **Instant Activation:** Sends an immediate distress signal with **GPS coordinates**, **battery level**, and **signal strength**.
 *   **Multi-Channel Alert:** Notifies designated emergency contacts and family members instantly.
 *   **Countdown Timer:** Prevents accidental triggers.
 
-### 2. 🤖 AI Contract Analysis (BETA)
+### 2. AI Contract Analysis (BETA)
 *   **Risk Scoring:** Upload a photo of any employment contract to get a risk score (0-100).
 *   **Clause Detection:** Identifies predatory clauses (e.g., "Passport Retention", "Undefined Overtime").
 *   **Native Translation:** Explains complex legal jargon in simple **Nepali**.
 
-### 3. 🔐 Secure Document Vault
+### 3. Secure Document Vault
 *   **Encrypted Storage:** Safely store digital copies of Passports, Visas, and Insurance policies.
 *   **Verification Tracking:** Track which documents are verified and compliant.
 *   **Owner-Only Access:** Strict permission controls ensure only the worker can manage their files.
 
-### 4. 🏠 Family Safety Dashboard
+### 4. Family Safety Dashboard
 *   **Peace of Mind:** Verified family members can view a "Safety Pulse" of the worker.
 *   **Activity Feed:** See logs like "Arrived at Site", "Check-in Safe", or "Contract Uploaded".
 *   **Privacy First:** Workers control location sharing preferences.
 
-### 5. 📍 Embassy & Community Locator
+### 5. Embassy & Community Locator
 *   **Geospatial Directory:** Interactive map showing the nearest **Nepali Embassies** and **Community Support Centers**.
 *   **One-Touch Connect:** Call hotlines or get directions directly from the app.
 
 ---
 
-## 🏗 Architecture & Technology
+##  Architecture & Technology
 
 ### Tech Stack
 *   **Backend:** Python 3.10+, Django 6.0.2
@@ -88,7 +88,7 @@ Thousands of Nepali workers migrate daily, facing:
 
 ---
 
-## 🛠 Installation & Setup
+##  Installation & Setup
 
 ### Prerequisites
 *   Python 3.10 or higher
@@ -98,7 +98,7 @@ Thousands of Nepali workers migrate daily, facing:
 
 1.  **Clone the Repository**
     ```bash
-    git clone https://github.com/the_debuggers/pravash.git
+    git clone https://github.com/saugat2003/pravashi.git
     cd pravash
     ```
 
@@ -131,7 +131,7 @@ Thousands of Nepali workers migrate daily, facing:
 
 ---
 
-## 📱 Usage Guide
+## Usage Guide
 
 ### For Workers
 1.  **Register/Login:** Sign up as a "Worker".
@@ -147,7 +147,7 @@ Thousands of Nepali workers migrate daily, facing:
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 pravash/
@@ -168,7 +168,7 @@ pravash/
 
 ---
 
-## 🚀 Future Roadmap
+## Future Roadmap
 *   [ ] **Real-time AI:** Integrate OpenAI/Gemini API for live contract analysis.
 *   [ ] **Offline Mode:** PWA capabilities for low-connectivity usage.
 *   [ ] **Fintech Integration:** Remittance tracking and safe transfer guides.
