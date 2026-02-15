@@ -3,7 +3,7 @@
 
 > **Status:** Hackathon Prototype (MVP)  
 > **Team:** The Debuggers
-> **Project Name:** Pravash
+> **Project Name:** Pravashi
 
 ---
 
